@@ -1,40 +1,36 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: THREAD
+description: Textile Harmonised Record Exchange and Attestation Data — an open, interoperable data framework for textile Digital Product Passports.
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
+  tagline: An open data framework for transferring textile supply chain data across systems, built for EU ESPR compliance.
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get started
+      link: /overview/introduction/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
+    - text: View the schema
+      link: /data-model/schema/
+      icon: document
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
-
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+  <Card title="Architecture" icon="puzzle">
+    Understand the full system — ingestion, canonical store, validation, and export layers.
+    [View architecture →](/overview/architecture/)
+  </Card>
+  <Card title="Data Model" icon="document">
+    Canonical schema for batch-level textile DPPs, from fibre origin to end-of-life.
+    [Explore the schema →](/data-model/schema/)
+  </Card>
+  <Card title="Integration" icon="rocket">
+    REST API, CSV upload, and web forms — three ingestion tiers for every supplier size.
+    [Integration guide →](/integration/rest-api/)
+  </Card>
+  <Card title="EU ESPR Compliance" icon="approve-check">
+    Field-by-field mapping to EU ESPR requirements and compliance completeness scoring.
+    [ESPR mapping →](/compliance/eu-espr/)
+  </Card>
 </CardGrid>
