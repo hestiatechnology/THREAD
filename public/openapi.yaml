@@ -1,0 +1,1297 @@
+openapi: 3.1.0
+
+info:
+  title: THREAD API
+  version: 1.0.0
+  description: |
+    REST API for the THREAD open standard — Textile Harmonised Record Exchange and
+    Attestation Data. Enables brands, suppliers, and certification bodies to create,
+    contribute to, and publish batch-level textile Digital Product Passports (DPPs)
+    under EU ESPR.
+
+    **JSON Schema:** https://thread.textileeco.com/schema.json
+
+    ## Authentication
+
+    All write endpoints require an OAuth 2.0 bearer token. Token scopes map to
+    supply chain roles — a `dpp:tier2:write` token can only write to the fields
+    owned by Tier 2 (processing, chemicals). Cross-tier writes are rejected with
+    `403`.
+
+    The public read endpoint (`GET /thread/v1/dpp/{gtin}/{batchId}`) requires no
+    authentication for published DPPs.
+
+  contact:
+    name: TextileEco
+    url: https://thread.textileeco.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://api.textileeco.com/v1
+    description: Production
+
+tags:
+  - name: Products
+    description: Product shell management
+  - name: Batches
+    description: Batch DPP lifecycle
+  - name: Supply Chain Data
+    description: Per-tier data submission
+  - name: Completeness & Publishing
+    description: ESPR completeness and DPP publication
+  - name: Federation
+    description: Cross-platform interoperability endpoints
+  - name: Webhooks
+    description: Event subscriptions
+
+paths:
+
+  # ── Products ──────────────────────────────────────────────────────────────
+
+  /products/{gtin}:
+    put:
+      operationId: upsertProduct
+      summary: Create or update a product shell
+      tags: [Products]
+      security:
+        - bearerAuth: [dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+            examples:
+              default:
+                value:
+                  gtin: "0123456789012"
+                  name: Organic Cotton T-Shirt
+                  modelNumber: SS26-TEE-001
+                  category:
+                    gpc: "10000002"
+                    description: T-Shirts
+                  targetMarket: [EU, PT]
+                  euImporter:
+                    name: Example EU Importer Lda
+                    country: PT
+                    vatNumber: PT500000000
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    get:
+      operationId: getProduct
+      summary: Get a product shell
+      tags: [Products]
+      security:
+        - bearerAuth: [dpp:brand:read]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+      responses:
+        '200':
+          description: Product record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Batches ───────────────────────────────────────────────────────────────
+
+  /products/{gtin}/batches:
+    post:
+      operationId: createBatch
+      summary: Create a batch DPP
+      tags: [Batches]
+      security:
+        - bearerAuth: [dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchInput'
+            examples:
+              default:
+                value:
+                  batchId: B2026Q1-001
+                  productionDate: "2026-01"
+                  quantity: 500
+                  unit: pieces
+                  countryOfOrigin: TR
+      responses:
+        '201':
+          description: Batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchCreatedResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}:
+    get:
+      operationId: getBatch
+      summary: Get a batch DPP (authenticated)
+      description: Returns the full batch DPP including draft data. Requires `dpp:brand:read` scope.
+      tags: [Batches]
+      security:
+        - bearerAuth: [dpp:brand:read]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: Full batch DPP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDPP'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Supply Chain Data ─────────────────────────────────────────────────────
+
+  /products/{gtin}/batches/{batchId}/materials:
+    put:
+      operationId: submitMaterials
+      summary: Submit fibre composition data (Tier 3)
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:tier3:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MaterialEntry'
+            examples:
+              default:
+                value:
+                  - fibre: organic cotton
+                    percentage: 95
+                    origin:
+                      country: IN
+                      region: Gujarat
+                    recycledContent: 0
+                    certifications: [GOTS]
+                  - fibre: elastane
+                    percentage: 5
+                    origin:
+                      country: DE
+                    recycledContent: 0
+                    certifications: []
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}/manufacturing:
+    post:
+      operationId: submitManufacturingStage
+      summary: Submit a manufacturing facility stage
+      description: Appends one processing stage to the supply chain. Each call adds a stage; the array is ordered by submission time.
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:tier1:write, dpp:tier2:write, dpp:tier3:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManufacturingStage'
+            examples:
+              default:
+                value:
+                  stage: dyeing_finishing
+                  facility:
+                    id: "urn:gs1:414:9876543210003"
+                    name: XYZ Dyehouse
+                    country: TR
+                    city: Bursa
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}/environmental:
+    put:
+      operationId: submitEnvironmental
+      summary: Submit environmental impact data (Tier 2)
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:tier2:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentalData'
+            examples:
+              default:
+                value:
+                  carbonFootprint:
+                    value: 4.2
+                    unit: kgCO2e
+                    scope: cradle-to-gate
+                    methodology: Higg MSI
+                  waterConsumption:
+                    value: 2700
+                    unit: litres_per_unit
+                  chemicalsOfConcern: []
+                  microplasticRisk: low
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}/social:
+    put:
+      operationId: submitSocial
+      summary: Submit social compliance data (Tier 1)
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:tier1:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialData'
+            examples:
+              default:
+                value:
+                  certifications: [GOTS, Fair Trade Certified]
+                  livingWageStatus: third-party-assured
+                  auditRef: https://audits.textileeco.com/report/12345
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}/compliance:
+    put:
+      operationId: submitCompliance
+      summary: Submit regulatory compliance data (Tier 1 / Brand)
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:tier1:write, dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplianceData'
+            examples:
+              default:
+                value:
+                  reachSVHC: []
+                  zdhcMRSL: compliant
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{gtin}/batches/{batchId}/circular-economy:
+    put:
+      operationId: submitCircularEconomy
+      summary: Submit circular economy and end-of-life data (Brand)
+      tags: [Supply Chain Data]
+      security:
+        - bearerAuth: [dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CircularEconomyData'
+            examples:
+              default:
+                value:
+                  recycledContent: 0
+                  recyclabilityScore: high
+                  recyclabilityBasis: 100% single-fibre natural, no coatings
+                  repairInfo: https://brand.textileeco.com/repair/SS26-TEE-001
+                  endOfLifeOptions: [take-back-scheme, home-compostable]
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ── Completeness & Publishing ─────────────────────────────────────────────
+
+  /products/{gtin}/batches/{batchId}/completeness:
+    get:
+      operationId: getCompleteness
+      summary: Get ESPR completeness report
+      tags: [Completeness & Publishing]
+      security:
+        - bearerAuth: [dpp:brand:read]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: Completeness report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletenessReport'
+              examples:
+                default:
+                  value:
+                    score: 0.87
+                    status: incomplete
+                    espr:
+                      required: 14
+                      present: 12
+                      missing:
+                        - environmental.carbonFootprint
+                        - compliance.reachSVHC
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /products/{gtin}/batches/{batchId}/publish:
+    post:
+      operationId: publishBatch
+      summary: Publish a DPP
+      description: |
+        Transitions a batch DPP from `draft` to `published`. Only callable with
+        `dpp:brand:write` scope. Blocked if ESPR-required fields are missing.
+        Once published, the DPP is publicly readable via the federation endpoint
+        and a GS1 Digital Link URL is issued.
+      tags: [Completeness & Publishing]
+      security:
+        - bearerAuth: [dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: DPP published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishResponse'
+              examples:
+                default:
+                  value:
+                    status: published
+                    digitalLinkUrl: https://id.textileeco.com/01/0123456789012/10/B2026Q1-001
+                    registryRef: https://espr-registry.eu/dpp/0123456789012/B2026Q1-001
+        '400':
+          description: ESPR completeness requirements not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                default:
+                  value:
+                    error: espr_incomplete
+                    message: DPP cannot be published — required ESPR fields are missing
+                    fields:
+                      - path: environmental.carbonFootprint
+                        issue: Required for ESPR compliance
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ── Federation ────────────────────────────────────────────────────────────
+
+  /thread/v1/dpp/{gtin}/{batchId}:
+    get:
+      operationId: getPublicDPP
+      summary: Public read — get a published DPP
+      description: |
+        Returns the canonical THREAD JSON for a published DPP. No authentication
+        required. Returns `404` for draft DPPs (existence is not disclosed) and
+        `410` for superseded DPPs with a `Link` header pointing to the successor.
+
+        This endpoint must be implemented by every THREAD-compliant node.
+      tags: [Federation]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: Published DPP
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              examples:
+                default:
+                  value: public, max-age=3600
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDPP'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: DPP has been superseded by a newer version
+          headers:
+            Link:
+              schema:
+                type: string
+              examples:
+                default:
+                  value: '<https://api.textileeco.com/v1/thread/v1/dpp/0123456789012/B2026Q2-001>; rel="successor-version"'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{gtin}/batches/{batchId}/export/thread-package:
+    get:
+      operationId: exportThreadPackage
+      summary: Export a signed THREAD Portable Package
+      description: |
+        Returns a JWS-signed portable package containing the requesting tier's
+        data slice and provenance entries. The package can be submitted to another
+        THREAD-compliant node via `import-package`.
+      tags: [Federation]
+      security:
+        - bearerAuth: [dpp:read]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: Signed portable package
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortablePackage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /products/{gtin}/batches/{batchId}/import-package:
+    post:
+      operationId: importThreadPackage
+      summary: Import a signed THREAD Portable Package
+      description: |
+        Accepts a THREAD Portable Package from any THREAD-compliant node. The
+        issuing node's public key is fetched from their
+        `/.well-known/thread-keys.json` to verify the JWS signature. Data is
+        imported with provenance intact.
+      tags: [Federation]
+      security:
+        - bearerAuth: [dpp:brand:write]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortablePackage'
+      responses:
+        '200':
+          $ref: '#/components/responses/DataAccepted'
+        '400':
+          description: Invalid or unverifiable package signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                default:
+                  value:
+                    error: invalid_signature
+                    message: JWS signature could not be verified against issuer public key
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /products/{gtin}/batches/{batchId}/export/espr-registry:
+    get:
+      operationId: exportESPRRegistry
+      summary: Export DPP in EU ESPR registry format (JSON-LD)
+      description: |
+        Returns the DPP as a JSON-LD document ready to submit to the EU ESPR
+        registry. The export format will be updated when the ESPR delegated act
+        for textiles is finalised (expected 2026–2027).
+      tags: [Federation]
+      security:
+        - bearerAuth: [dpp:brand:read]
+      parameters:
+        - $ref: '#/components/parameters/gtin'
+        - $ref: '#/components/parameters/batchId'
+      responses:
+        '200':
+          description: JSON-LD registry payload
+          content:
+            application/ld+json:
+              schema:
+                type: object
+                description: JSON-LD document conforming to the EU ESPR registry submission format
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Webhooks ──────────────────────────────────────────────────────────────
+
+  /webhooks:
+    post:
+      operationId: createWebhook
+      summary: Subscribe to batch DPP events
+      tags: [Webhooks]
+      security:
+        - bearerAuth: [dpp:brand:read]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookInput'
+            examples:
+              default:
+                value:
+                  url: https://your-system.textileeco.com/thread-webhook
+                  events:
+                    - batch.created
+                    - batch.completeness_changed
+                    - batch.published
+                  secret: your-hmac-secret
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+# ── Components ───────────────────────────────────────────────────────────────
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.textileeco.com/oauth/token
+          scopes:
+            dpp:brand:write: Write brand-layer fields (product, care, end-of-life)
+            dpp:tier1:write: Write Tier-1 fields (CMT facility, social compliance)
+            dpp:tier2:write: Write Tier-2 fields (processing facility, chemicals)
+            dpp:tier3:write: Write Tier-3 fields (raw material, fibre certifications)
+            dpp:certifier:write: Push verified certification status
+            dpp:read: Read own-tier data
+            dpp:brand:read: Read full DPP (brand only)
+
+  parameters:
+    gtin:
+      name: gtin
+      in: path
+      required: true
+      description: GTIN-13 product identifier
+      schema:
+        type: string
+        pattern: '^\d{13}$'
+
+    batchId:
+      name: batchId
+      in: path
+      required: true
+      description: Batch/lot identifier unique within the GTIN scope
+      schema:
+        type: string
+
+  responses:
+    DataAccepted:
+      description: Data accepted and merged into the batch DPP
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              completenessScore:
+                type: number
+                minimum: 0
+                maximum: 1
+              espr:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [incomplete, complete]
+                  missingFields:
+                    type: array
+                    items:
+                      type: string
+
+    ValidationError:
+      description: Request body failed schema validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            default:
+              value:
+                error: validation_failed
+                message: Material percentages do not sum to 100
+                fields:
+                  - path: materials[0].percentage
+                    issue: Values sum to 98, expected 100
+
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            default:
+              value:
+                error: unauthorized
+                message: Bearer token is missing or expired
+
+    Forbidden:
+      description: Token scope does not permit this operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            default:
+              value:
+                error: forbidden
+                message: Scope dpp:tier2:write cannot write to materials (Tier 3 domain)
+
+    NotFound:
+      description: GTIN or batch not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            default:
+              value:
+                error: not_found
+                message: Batch B2026Q1-001 not found for GTIN 0123456789012
+
+    Conflict:
+      description: Operation conflicts with current state (e.g. writing to a published DPP)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            default:
+              value:
+                error: conflict
+                message: DPP is published and cannot be modified. Create a new batch version instead.
+
+  schemas:
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable description
+        fields:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              issue:
+                type: string
+
+    ProductInput:
+      type: object
+      required: [gtin, name, category, targetMarket]
+      properties:
+        gtin:
+          type: string
+          pattern: '^\d{13}$'
+        name:
+          type: string
+        modelNumber:
+          type: string
+        category:
+          type: object
+          required: [gpc]
+          properties:
+            gpc:
+              type: string
+              description: GS1 Global Product Classification brick code
+            description:
+              type: string
+        targetMarket:
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1 alpha-2 country codes
+        euImporter:
+          type: object
+          description: Required when brand is outside the EU
+          properties:
+            name:
+              type: string
+            country:
+              type: string
+              pattern: '^[A-Z]{2}$'
+            vatNumber:
+              type: string
+
+    ProductResponse:
+      allOf:
+        - $ref: '#/components/schemas/ProductInput'
+        - type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    BatchInput:
+      type: object
+      required: [batchId, productionDate, quantity, unit, countryOfOrigin]
+      properties:
+        batchId:
+          type: string
+        productionDate:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+          description: ISO 8601 year-month (YYYY-MM)
+        quantity:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          enum: [pieces, kg, metres]
+        countryOfOrigin:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1 alpha-2 — country of last substantial transformation
+
+    BatchCreatedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [draft]
+        completenessScore:
+          type: number
+          minimum: 0
+          maximum: 1
+        supplierInviteLinks:
+          type: object
+          properties:
+            tier1:
+              type: string
+              format: uri
+            tier2:
+              type: string
+              format: uri
+            tier3:
+              type: string
+              format: uri
+
+    MaterialEntry:
+      type: object
+      required: [fibre, percentage, origin, recycledContent]
+      properties:
+        fibre:
+          type: string
+          description: Fibre type — ISO 2076 name preferred, lowercase
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+        origin:
+          type: object
+          required: [country]
+          properties:
+            country:
+              type: string
+              pattern: '^[A-Z]{2}$'
+            region:
+              type: string
+        recycledContent:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Percentage of recycled input by weight
+        certifications:
+          type: array
+          items:
+            type: string
+        supplierRef:
+          type: string
+          format: uri
+          description: GLN or URN of the raw material supplier
+
+    ManufacturingStage:
+      type: object
+      required: [stage, facility]
+      properties:
+        stage:
+          type: string
+          enum:
+            - raw_material
+            - ginning
+            - spinning
+            - weaving_knitting
+            - dyeing_finishing
+            - cut_make_trim
+            - embellishment
+            - logistics
+        facility:
+          type: object
+          required: [name, country]
+          properties:
+            id:
+              type: string
+              description: GLN as URN (urn:gs1:414:...) or other facility identifier
+            name:
+              type: string
+            country:
+              type: string
+              pattern: '^[A-Z]{2}$'
+            city:
+              type: string
+
+    EnvironmentalData:
+      type: object
+      properties:
+        carbonFootprint:
+          type: object
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+              enum: [kgCO2e]
+            scope:
+              type: string
+              enum: [cradle-to-gate, cradle-to-grave]
+            methodology:
+              type: string
+              description: e.g. "Higg MSI", "ISO 14067"
+        waterConsumption:
+          type: object
+          properties:
+            value:
+              type: number
+            unit:
+              type: string
+              enum: [litres_per_unit]
+        chemicalsOfConcern:
+          type: array
+          items:
+            type: object
+            properties:
+              cas:
+                type: string
+              name:
+                type: string
+              concentration:
+                type: number
+        microplasticRisk:
+          type: string
+          enum: [low, medium, high]
+
+    SocialData:
+      type: object
+      properties:
+        certifications:
+          type: array
+          items:
+            type: string
+        livingWageStatus:
+          type: string
+          enum: [self-declared, third-party-assured, not-assessed]
+        auditRef:
+          type: string
+          format: uri
+
+    ComplianceData:
+      type: object
+      properties:
+        reachSVHC:
+          type: array
+          description: Substances of Very High Concern — empty array means none detected
+          items:
+            type: object
+            required: [cas, name, concentration]
+            properties:
+              cas:
+                type: string
+              name:
+                type: string
+              concentration:
+                type: number
+        zdhcMRSL:
+          type: string
+          enum: [compliant, non-compliant, not-assessed]
+
+    CircularEconomyData:
+      type: object
+      properties:
+        recycledContent:
+          type: number
+          minimum: 0
+          maximum: 100
+        recyclabilityScore:
+          type: string
+          enum: [high, medium, low]
+        recyclabilityBasis:
+          type: string
+        repairInfo:
+          type: string
+          format: uri
+        endOfLifeOptions:
+          type: array
+          items:
+            type: string
+            enum:
+              - take-back-scheme
+              - kerbside-recyclable
+              - home-compostable
+              - industrial-compostable
+              - textile-recycler
+
+    ProvenanceEntry:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Dot-notation path to the asserted field
+        assertedBy:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            role:
+              type: string
+              enum: [brand, tier1-supplier, tier2-supplier, tier3-supplier, certifier]
+        issuedBy:
+          type: string
+          format: uri
+          description: Issuing THREAD node (present on imported portable packages)
+        assertedAt:
+          type: string
+          format: date-time
+        evidenceType:
+          type: string
+          enum: [self-declared, third-party-audit, certification, lab-test, epr-report]
+        evidenceRef:
+          type: string
+        method:
+          type: string
+          enum: [api, csv-upload, web-form, edi, portable-package]
+
+    BatchDPP:
+      type: object
+      description: Full canonical THREAD batch DPP. See https://thread.textileeco.com/schema.json for the complete JSON Schema.
+      properties:
+        dpp:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uri
+            schemaVersion:
+              type: string
+            status:
+              type: string
+              enum: [draft, published, superseded]
+            issuedAt:
+              type: string
+              format: date-time
+            issuedBy:
+              type: object
+            completenessScore:
+              type: number
+              minimum: 0
+              maximum: 1
+            espr:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [incomplete, complete, published]
+                missingFields:
+                  type: array
+                  items:
+                    type: string
+        product:
+          $ref: '#/components/schemas/ProductInput'
+        batch:
+          $ref: '#/components/schemas/BatchInput'
+        materials:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaterialEntry'
+        manufacturing:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManufacturingStage'
+        environmental:
+          $ref: '#/components/schemas/EnvironmentalData'
+        social:
+          $ref: '#/components/schemas/SocialData'
+        circularEconomy:
+          $ref: '#/components/schemas/CircularEconomyData'
+        compliance:
+          $ref: '#/components/schemas/ComplianceData'
+        provenance:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProvenanceEntry'
+
+    CompletenessReport:
+      type: object
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        status:
+          type: string
+          enum: [incomplete, complete]
+        espr:
+          type: object
+          properties:
+            required:
+              type: integer
+            present:
+              type: integer
+            missing:
+              type: array
+              items:
+                type: string
+
+    PublishResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [published]
+        digitalLinkUrl:
+          type: string
+          format: uri
+          description: GS1 Digital Link URL for the published DPP
+        registryRef:
+          type: string
+          format: uri
+          description: EU ESPR registry reference (when available)
+
+    PortablePackage:
+      type: object
+      description: A JWS-signed data package for cross-platform supplier data exchange
+      required: [threadPackage, gtin, batchId, tier, data, provenance, signature]
+      properties:
+        threadPackage:
+          type: string
+          enum: ["1.0"]
+        gtin:
+          type: string
+          pattern: '^\d{13}$'
+        batchId:
+          type: string
+        tier:
+          type: string
+          enum: [brand, tier1, tier2, tier3, certifier]
+        data:
+          type: object
+          description: The tier's canonical data fields
+        provenance:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProvenanceEntry'
+        signature:
+          type: object
+          required: [issuer, issuedAt, algorithm, value]
+          properties:
+            issuer:
+              type: string
+              format: uri
+              description: Base URL of the issuing THREAD node
+            issuedAt:
+              type: string
+              format: date-time
+            algorithm:
+              type: string
+              enum: [ES256, RS256]
+            value:
+              type: string
+              description: JWS compact serialisation
+
+    WebhookInput:
+      type: object
+      required: [url, events, secret]
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - batch.created
+              - batch.data_submitted
+              - batch.completeness_changed
+              - batch.certification_updated
+              - batch.published
+              - batch.superseded
+        secret:
+          type: string
+          description: HMAC-SHA256 secret used to sign webhook payloads
+
+    WebhookResponse:
+      allOf:
+        - $ref: '#/components/schemas/WebhookInput'
+        - type: object
+          properties:
+            id:
+              type: string
+            createdAt:
+              type: string
+              format: date-time

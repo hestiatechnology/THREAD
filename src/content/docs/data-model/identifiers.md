@@ -29,7 +29,7 @@ https://id.{resolver-domain}/01/{GTIN}/10/{BatchID}
 
 **Example:**
 ```
-https://id.example-brand.com/01/0123456789012/10/B2024Q3-001
+https://id.textileeco.com/01/0123456789012/10/B2024Q3-001
 ```
 
 Resolving this URL returns the DPP record. The resolver can be hosted by the brand, a platform provider, or the EU registry — the URL format is stable regardless.

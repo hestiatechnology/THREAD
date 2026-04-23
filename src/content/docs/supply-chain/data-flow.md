@@ -43,7 +43,7 @@ PUT /products/0123456789012
     "expectedLifetimeWashes": 50
   },
   "circularEconomy": {
-    "repairInfo": "https://brand.example/repair/SS26-TEE-001",
+    "repairInfo": "https://brand.textileeco.com/repair/SS26-TEE-001",
     "endOfLifeOptions": ["take-back-scheme"]
   }
 }

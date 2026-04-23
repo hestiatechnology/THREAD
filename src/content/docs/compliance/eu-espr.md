@@ -87,7 +87,7 @@ The QR code payload is the Digital Link URI:
 https://id.{brand-domain}/01/{GTIN}/10/{BatchID}
 ```
 
-For brands without their own resolver, THREAD provides a hosted resolver at `id.thread-dpp.org`.
+For brands without their own resolver, THREAD provides a hosted resolver at `id.textileeco.com`.
 
 ## Self-declaration vs. verified data
 
@@ -108,4 +108,4 @@ When the ESPR delegated act for textiles is published, THREAD will:
 3. Provide a 6-month grace period during which both old and new rulesets are accepted
 4. Mark older DPPs with a `schema_update_required` flag
 
-Subscribe to the THREAD changelog at `https://thread-dpp.org/changelog` to receive notifications when the delegated act is published and the schema is updated.
+Subscribe to the THREAD changelog at `https://textileeco.com/changelog` to receive notifications when the delegated act is published and the schema is updated.

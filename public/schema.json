@@ -1,0 +1,658 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thread.textileeco.com/schema.json",
+  "title": "THREAD Batch DPP",
+  "description": "Canonical schema for a batch-level textile Digital Product Passport. Open standard published by TextileEco. Version 1.0.0.",
+  "type": "object",
+  "required": ["dpp", "product", "batch", "materials", "manufacturing"],
+  "additionalProperties": false,
+
+  "$defs": {
+
+    "isoCountry": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "ISO 3166-1 alpha-2 country code."
+    },
+
+    "gtin13": {
+      "type": "string",
+      "pattern": "^[0-9]{13}$",
+      "description": "GS1 GTIN-13 — 13-digit numeric product identifier."
+    },
+
+    "gln13": {
+      "type": "string",
+      "pattern": "^[0-9]{13}$",
+      "description": "GS1 GLN-13 — 13-digit numeric location identifier."
+    },
+
+    "batchId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,20}$",
+      "description": "Batch/lot identifier. Alphanumeric with hyphens and underscores, max 20 characters."
+    },
+
+    "digitalLinkUri": {
+      "type": "string",
+      "pattern": "^https://.+/01/[0-9]{13}/10/.+$",
+      "description": "GS1 Digital Link URI encoding GTIN and batch/lot identifiers."
+    },
+
+    "facilityId": {
+      "type": "string",
+      "description": "Facility identifier. Canonical form is a GLN URN (urn:gs1:414:{gln13}). Interim self-assigned form is urn:thread:facility:{iso-country}:{internal-id}.",
+      "examples": [
+        "urn:gs1:414:4061234500003",
+        "urn:thread:facility:IN:SPIN-001"
+      ]
+    },
+
+    "washSymbol": {
+      "type": "string",
+      "enum": [
+        "wash-30",
+        "wash-40",
+        "wash-60",
+        "wash-95",
+        "hand-wash",
+        "do-not-wash",
+        "do-not-bleach",
+        "bleach-when-needed",
+        "tumble-dry-low",
+        "tumble-dry-normal",
+        "do-not-tumble-dry",
+        "iron-low",
+        "iron-medium",
+        "iron-high",
+        "do-not-iron",
+        "dry-clean",
+        "do-not-dry-clean",
+        "line-dry",
+        "drip-dry",
+        "dry-flat"
+      ],
+      "description": "ISO 3758 / GINETEX care symbol code."
+    },
+
+    "manufacturingStage": {
+      "type": "string",
+      "enum": [
+        "raw_material",
+        "ginning",
+        "spinning",
+        "weaving_knitting",
+        "dyeing_finishing",
+        "cut_make_trim",
+        "embellishment",
+        "logistics"
+      ],
+      "description": "Processing stage in the supply chain."
+    },
+
+    "evidenceType": {
+      "type": "string",
+      "enum": [
+        "self-declared",
+        "third-party-audit",
+        "certification",
+        "lab-test",
+        "epr-report"
+      ],
+      "description": "Type of evidence backing the asserted data point."
+    },
+
+    "submitterRole": {
+      "type": "string",
+      "enum": [
+        "brand",
+        "tier1-supplier",
+        "tier2-supplier",
+        "tier3-supplier",
+        "certifier"
+      ],
+      "description": "Role of the entity that submitted this data."
+    },
+
+    "ingestionMethod": {
+      "type": "string",
+      "enum": [
+        "api",
+        "csv-upload",
+        "excel-upload",
+        "web-form",
+        "edi",
+        "portable-package"
+      ],
+      "description": "Method used to submit this data to the platform."
+    },
+
+    "facility": {
+      "type": "object",
+      "required": ["id", "name", "country"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/facilityId" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "country": { "$ref": "#/$defs/isoCountry" },
+        "city": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "certifications": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Facility-level certifications (e.g. STeP by OEKO-TEX, ISO 14001)."
+        }
+      }
+    },
+
+    "provenanceEntry": {
+      "type": "object",
+      "required": ["field", "assertedBy", "assertedAt", "evidenceType", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Dot-notation path to the asserted field (e.g. 'environmental.carbonFootprint')."
+        },
+        "assertedBy": {
+          "type": "object",
+          "required": ["id", "name", "role"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "GLN URN or URI identifying the asserting entity."
+            },
+            "name": { "type": "string" },
+            "role": { "$ref": "#/$defs/submitterRole" }
+          }
+        },
+        "issuedBy": {
+          "type": "string",
+          "format": "uri",
+          "description": "THREAD node domain that issued this provenance entry (for cross-platform portable packages)."
+        },
+        "assertedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "evidenceType": { "$ref": "#/$defs/evidenceType" },
+        "evidenceRef": {
+          "type": "string",
+          "description": "Certificate number, audit report ID, lab test reference, or URI to a W3C Verifiable Credential."
+        },
+        "method": { "$ref": "#/$defs/ingestionMethod" }
+      }
+    }
+
+  },
+
+  "properties": {
+
+    "dpp": {
+      "type": "object",
+      "description": "DPP record metadata.",
+      "required": ["id", "schemaVersion", "status", "issuedAt", "issuedBy"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/digitalLinkUri" },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$",
+          "description": "THREAD schema version used for this record."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published", "superseded"],
+          "description": "Publication status. Only 'published' records are accessible to the public."
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last update."
+        },
+        "issuedBy": {
+          "type": "object",
+          "required": ["id", "name", "role"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "GLN URN or URI of the brand."
+            },
+            "name": { "type": "string" },
+            "role": {
+              "type": "string",
+              "const": "brand"
+            }
+          }
+        },
+        "supersedes": {
+          "$ref": "#/$defs/digitalLinkUri",
+          "description": "Digital Link URI of the previous version this record supersedes."
+        },
+        "completenessScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "ESPR completeness ratio (0–1). Computed by the validation engine."
+        },
+        "espr": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["incomplete", "complete", "published"]
+            },
+            "missingFields": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Dot-notation paths of fields required for ESPR compliance that are not yet present."
+            }
+          }
+        }
+      }
+    },
+
+    "product": {
+      "type": "object",
+      "description": "Product-level identity. Defined once; inherited by all batches of this product.",
+      "required": ["gtin", "name", "category", "targetMarket"],
+      "additionalProperties": false,
+      "properties": {
+        "gtin": { "$ref": "#/$defs/gtin13" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "modelNumber": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Internal model/SKU identifier."
+        },
+        "category": {
+          "type": "object",
+          "required": ["gpc"],
+          "additionalProperties": false,
+          "properties": {
+            "gpc": {
+              "type": "string",
+              "pattern": "^[0-9]{8}$",
+              "description": "GS1 Global Product Classification (GPC) brick code."
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        },
+        "targetMarket": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/isoCountry" },
+          "minItems": 1,
+          "description": "ISO 3166-1 alpha-2 country codes of intended markets."
+        },
+        "euImporter": {
+          "type": "object",
+          "description": "Required when the issuing brand is based outside the EU/EEA.",
+          "required": ["name", "country"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "country": { "$ref": "#/$defs/isoCountry" },
+            "vatNumber": {
+              "type": "string",
+              "description": "EU VAT registration number."
+            },
+            "address": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        }
+      }
+    },
+
+    "batch": {
+      "type": "object",
+      "description": "Batch/lot identity. Variable per production run.",
+      "required": ["batchId", "productionDate", "quantity", "unit", "countryOfOrigin"],
+      "additionalProperties": false,
+      "properties": {
+        "batchId": { "$ref": "#/$defs/batchId" },
+        "productionDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+          "description": "Production month in ISO 8601 year-month format (YYYY-MM)."
+        },
+        "quantity": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["pieces", "kg", "metres"]
+        },
+        "countryOfOrigin": {
+          "$ref": "#/$defs/isoCountry",
+          "description": "Country of last substantial transformation — typically the CMT country."
+        }
+      }
+    },
+
+    "materials": {
+      "type": "array",
+      "description": "Fibre composition. Percentage values across all entries must sum to 100.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["fibre", "percentage", "origin", "recycledContent"],
+        "additionalProperties": false,
+        "properties": {
+          "fibre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Fibre type. ISO 2076 name preferred (e.g. 'cotton', 'polyester', 'organic cotton')."
+          },
+          "percentage": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100,
+            "description": "Percentage of this fibre by weight. All entries must sum to 100."
+          },
+          "origin": {
+            "type": "object",
+            "required": ["country"],
+            "additionalProperties": false,
+            "properties": {
+              "country": { "$ref": "#/$defs/isoCountry" },
+              "region": {
+                "type": "string",
+                "maxLength": 100,
+                "description": "Sub-national region or state."
+              }
+            }
+          },
+          "recycledContent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of this material derived from recycled inputs, by weight."
+          },
+          "certifications": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Material-level certification codes. See https://thread.textileeco.com/compliance/standards/ for recognised values."
+          },
+          "supplierRef": {
+            "$ref": "#/$defs/facilityId",
+            "description": "GLN URN or facility URN of the raw material supplier."
+          }
+        }
+      }
+    },
+
+    "manufacturing": {
+      "type": "array",
+      "description": "Ordered supply chain facility chain from raw material to finished product.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["stage", "facility"],
+        "additionalProperties": false,
+        "properties": {
+          "stage": { "$ref": "#/$defs/manufacturingStage" },
+          "facility": { "$ref": "#/$defs/facility" }
+        }
+      }
+    },
+
+    "environmental": {
+      "type": "object",
+      "description": "Environmental impact data.",
+      "additionalProperties": false,
+      "properties": {
+        "carbonFootprint": {
+          "type": "object",
+          "description": "Carbon footprint per unit. All three sub-fields are required together for ESPR compliance.",
+          "required": ["value", "unit", "scope", "methodology"],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "type": "string",
+              "const": "kgCO2e"
+            },
+            "scope": {
+              "type": "string",
+              "enum": ["cradle-to-gate", "cradle-to-grave", "cradle-to-cradle"]
+            },
+            "methodology": {
+              "type": "string",
+              "description": "Calculation methodology (e.g. 'Higg MSI', 'Higg FEM', 'ISO 14067', 'GHG Protocol')."
+            }
+          }
+        },
+        "waterConsumption": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "type": "string",
+              "enum": ["litres_per_unit", "litres_per_kg"]
+            }
+          }
+        },
+        "chemicalsOfConcern": {
+          "type": "array",
+          "description": "List of substances of concern detected. Empty array means none detected.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "cas": {
+                "type": "string",
+                "pattern": "^[0-9]{2,7}-[0-9]{2}-[0-9]$",
+                "description": "CAS registry number."
+              },
+              "name": { "type": "string" },
+              "concentration": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Concentration by weight (%)."
+              }
+            }
+          }
+        },
+        "microplasticRisk": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Microplastic shedding risk level."
+        }
+      }
+    },
+
+    "social": {
+      "type": "object",
+      "description": "Social compliance data.",
+      "additionalProperties": false,
+      "properties": {
+        "certifications": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Social certification codes (e.g. 'GOTS', 'SA8000', 'FAIRTRADE'). See https://thread.textileeco.com/compliance/standards/ for recognised values."
+        },
+        "livingWageStatus": {
+          "type": "string",
+          "enum": ["self-declared", "third-party-assured", "not-assessed"]
+        },
+        "auditRef": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to the audit report or summary."
+        }
+      }
+    },
+
+    "circularEconomy": {
+      "type": "object",
+      "description": "Circularity, recyclability, and end-of-life information.",
+      "additionalProperties": false,
+      "properties": {
+        "recycledContent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Total recycled input as a percentage of total product weight. Required for ESPR."
+        },
+        "recyclabilityScore": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Overall recyclability assessment. Required for ESPR."
+        },
+        "recyclabilityBasis": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Plain-language rationale for the recyclability score. Required when score is 'medium' or 'low'."
+        },
+        "repairInfo": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to repair instructions or spare parts information. Required for ESPR."
+        },
+        "endOfLifeOptions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "take-back-scheme",
+              "kerbside-recyclable",
+              "home-compostable",
+              "industrial-compostable",
+              "textile-recycler"
+            ]
+          },
+          "description": "Available end-of-life pathways. At least one required for ESPR."
+        }
+      }
+    },
+
+    "care": {
+      "type": "object",
+      "description": "Care instructions and expected product lifetime.",
+      "additionalProperties": false,
+      "properties": {
+        "washSymbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/washSymbol" },
+          "description": "ISO 3758 / GINETEX care symbol codes. At least one required for ESPR."
+        },
+        "expectedLifetimeWashes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Expected number of wash cycles before end of usable life."
+        },
+        "expectedLifetimeYears": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Expected usable lifetime in years."
+        }
+      }
+    },
+
+    "compliance": {
+      "type": "object",
+      "description": "Regulatory compliance declarations.",
+      "additionalProperties": false,
+      "properties": {
+        "reachSVHC": {
+          "type": "array",
+          "description": "REACH Substances of Very High Concern (SVHC) present in this product. An explicit declaration is required for ESPR — submit an empty array if none are present.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "cas": {
+                "type": "string",
+                "pattern": "^[0-9]{2,7}-[0-9]{2}-[0-9]$"
+              },
+              "name": { "type": "string" },
+              "concentration": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        },
+        "zdhcMRSL": {
+          "type": "string",
+          "enum": ["compliant", "non-compliant", "not-assessed"],
+          "description": "ZDHC Manufacturing Restricted Substances List compliance status."
+        },
+        "espr": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["incomplete", "complete", "published"]
+            },
+            "verifiedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+
+    "externalRefs": {
+      "type": "array",
+      "description": "Proprietary system identifiers. Never used as primary keys — for cross-referencing with source systems only.",
+      "items": {
+        "type": "object",
+        "required": ["system", "id"],
+        "additionalProperties": false,
+        "properties": {
+          "system": {
+            "type": "string",
+            "description": "Name of the source system (e.g. 'SAP-ERP', 'Centric-PLM', 'GOTS-DB')."
+          },
+          "id": {
+            "type": "string",
+            "description": "Identifier within that system."
+          }
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "array",
+      "description": "Immutable attestation log. One entry per data block submission. Written by the platform; not submitted by users.",
+      "items": { "$ref": "#/$defs/provenanceEntry" }
+    }
+
+  }
+}

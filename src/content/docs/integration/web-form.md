@@ -14,7 +14,7 @@ The web form asks the same questions as the API and CSV templates, but presents 
 Suppliers do not need to create an account. The brand generates a scoped invite link for each tier and shares it with the relevant supplier:
 
 ```
-https://app.thread-dpp.org/contribute/t3/ghi789abc
+https://app.textileeco.com/contribute/t3/ghi789abc
 ```
 
 The link:

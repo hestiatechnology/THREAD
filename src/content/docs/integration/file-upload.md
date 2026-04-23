@@ -80,7 +80,7 @@ gtin,batch_id,certification_code,issuing_body,certificate_number,valid_from,vali
 
 ## Uploading files
 
-1. Log in to the THREAD portal at `https://app.thread-dpp.org`
+1. Log in to the THREAD portal at `https://app.textileeco.com`
 2. Navigate to the relevant batch (shared by the brand via an invite link)
 3. Select your data type (Materials / Manufacturing / Environmental / Certifications)
 4. Download the template for that data type

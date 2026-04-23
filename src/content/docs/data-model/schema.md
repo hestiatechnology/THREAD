@@ -7,6 +7,8 @@ sidebar:
 
 The THREAD canonical schema defines the complete data model for a batch-level textile DPP. It is serialised as JSON and validated against a JSON Schema definition.
 
+**JSON Schema:** [`https://thread.textileeco.com/schema.json`](https://thread.textileeco.com/schema.json) — import directly into any JSON Schema validator or IDE.
+
 ## Top-level structure
 
 ```json
@@ -32,7 +34,7 @@ The THREAD canonical schema defines the complete data model for a batch-level te
 
 ```json
 "dpp": {
-  "id": "https://id.example.com/01/0123456789012/10/B2026Q1-001",
+  "id": "https://id.textileeco.com/01/0123456789012/10/B2026Q1-001",
   "schemaVersion": "1.0",
   "status": "draft",
   "issuedAt": "2026-04-21T00:00:00Z",
@@ -230,7 +232,7 @@ Valid `stage` values: `raw_material` / `ginning` / `spinning` / `weaving_knittin
 "social": {
   "certifications": ["GOTS", "Fair Trade Certified"],
   "livingWageStatus": "third-party-assured",
-  "auditRef": "https://audit-platform.example/report/12345"
+  "auditRef": "https://audits.textileeco.com/report/12345"
 }
 ```
 
@@ -249,7 +251,7 @@ Valid `stage` values: `raw_material` / `ginning` / `spinning` / `weaving_knittin
   "recycledContent": 0,
   "recyclabilityScore": "high",
   "recyclabilityBasis": "100% single-fibre natural, no coatings",
-  "repairInfo": "https://brand.example/repair/SS26-TEE-001",
+  "repairInfo": "https://brand.textileeco.com/repair/SS26-TEE-001",
   "endOfLifeOptions": ["take-back-scheme", "home-compostable"]
 }
 ```

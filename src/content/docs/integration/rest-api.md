@@ -30,7 +30,7 @@ Token scopes map to supply chain roles:
 ## Base URL
 
 ```
-https://api.thread-dpp.org/v1
+https://api.textileeco.com/v1
 ```
 
 ---
@@ -77,13 +77,13 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-  "id": "https://api.thread-dpp.org/v1/products/0123456789012/batches/B2026Q1-001",
+  "id": "https://api.textileeco.com/v1/products/0123456789012/batches/B2026Q1-001",
   "status": "draft",
   "completenessScore": 0.12,
   "supplierInviteLinks": {
-    "tier1": "https://app.thread-dpp.org/contribute/t1/abc123",
-    "tier2": "https://app.thread-dpp.org/contribute/t2/def456",
-    "tier3": "https://app.thread-dpp.org/contribute/t3/ghi789"
+    "tier1": "https://app.textileeco.com/contribute/t1/abc123",
+    "tier2": "https://app.textileeco.com/contribute/t2/def456",
+    "tier3": "https://app.textileeco.com/contribute/t3/ghi789"
   }
 }
 ```
@@ -195,7 +195,7 @@ POST /products/{gtin}/batches/{batchId}/publish
 ```json
 {
   "status": "published",
-  "digitalLinkUrl": "https://id.example-brand.com/01/0123456789012/10/B2026Q1-001",
+  "digitalLinkUrl": "https://id.textileeco.com/01/0123456789012/10/B2026Q1-001",
   "registryRef": "https://espr-registry.eu/dpp/0123456789012/B2026Q1-001"
 }
 ```
@@ -211,7 +211,7 @@ POST /webhooks
 Content-Type: application/json
 
 {
-  "url": "https://your-system.example/thread-webhook",
+  "url": "https://your-system.textileeco.com/thread-webhook",
   "events": ["batch.created", "batch.completeness_changed", "batch.published"],
   "secret": "your-hmac-secret"
 }

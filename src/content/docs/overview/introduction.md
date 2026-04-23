@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-**THREAD** (Textile Harmonised Record Exchange and Attestation Data) is an open, interoperable data framework for transferring textile supply chain data between systems in support of the EU Digital Product Passport (DPP) mandate under the Ecodesign for Sustainable Products Regulation (ESPR).
+**THREAD** (Textile Harmonised Record Exchange and Attestation Data) is an open standard for transferring textile supply chain data between systems in support of the EU Digital Product Passport (DPP) mandate under the Ecodesign for Sustainable Products Regulation (ESPR). It is published and maintained by [TextileEco](https://textileeco.com), the hosted platform that implements it.
 
 ## The problem
 
@@ -40,6 +40,14 @@ THREAD defines:
 | **Certification bodies** | Push verified certification status directly via API |
 | **Retailers / platforms** | Consume DPP data for product pages, sustainability reporting, resale |
 | **EU DPP Registry** | Receive published, validated DPPs via GS1 Digital Link |
+
+## THREAD and TextileEco
+
+THREAD is the open standard — the schema, API contracts, validation rules, and CSV templates are freely available for anyone to implement.
+
+[TextileEco](https://textileeco.com) is the company that publishes THREAD and operates the hosted platform built on it. Brands and suppliers can use the TextileEco platform to get THREAD-compliant without building their own implementation. Other platforms and ERPs can implement the standard independently.
+
+This structure follows the open-core model: the standard is open, the hosted service is the product. When another platform adopts THREAD, the ecosystem strengthens rather than fragments.
 
 ## Design principles
 
