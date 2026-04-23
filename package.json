@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "playwright install chromium && astro build",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "generate-types": "wrangler types"
@@ -14,12 +14,10 @@
     "@astrojs/cloudflare": "^13.2.0",
     "@astrojs/starlight": "^0.38.3",
     "astro": "^6.0.1",
-    "rehype-mermaid": "^3.0.0",
+    "astro-mermaid": "^2.0.1",
+    "mermaid": "^11.14.0",
     "sharp": "^0.34.2",
     "wrangler": "^4.84.1"
-  },
-  "devDependencies": {
-    "playwright": "^1.59.1"
   },
   "overrides": {
     "vite": "^7"
