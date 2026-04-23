@@ -9,20 +9,49 @@ THREAD is structured as four layers: ingestion, canonical store, validation, and
 
 ## System diagram
 
-```
-                         ┌──────────────────────────────────────────────────────┐
-                         │                  THREAD Platform                      │
-                         │                                                        │
- [Supply Chain]          │  ┌─────────────┐  ┌──────────────────┐  ┌──────────┐ │   [Consumers]
-                         │  │  Ingestion  │  │  Canonical Store  │  │  Export  │ │
- T3: Raw material ───────┼──│             │  │  (per batch)      │  │          │─┼──▶ EU ESPR Registry
- T2: Processing ─────────┼──│  REST API   │  │                   │  │  GS1     │─┼──▶ QR / NFC / RFID
- T1: CMT factory ────────┼──│  CSV Upload │─▶│  Validation       │─▶│  Digital │─┼──▶ Brand portal
- Brand ──────────────────┼──│  Web Form   │  │  Engine           │  │  Link    │─┼──▶ Retailer systems
- Certifiers ─────────────┼──│  EDI/AS2    │  │                   │  │          │─┼──▶ Resale/recyclers
-                         │  └─────────────┘  │  Provenance Graph │  │  REST    │─┼──▶ Analytics
-                         │                   └──────────────────┘  └──────────┘ │
-                         └──────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    T3["T3: Raw material"] --> ING
+    T2["T2: Processing"] --> ING
+    T1["T1: CMT factory"] --> ING
+    BR[Brand] --> ING
+    CE[Certifiers] --> ING
+
+    ING["Ingestion\nREST API · CSV · Web Form · EDI"] --> CS
+    CS["Canonical Store\n(per batch · versioned · provenance)"] --> VE
+    VE["Validation Engine"] --> EX
+    EX[Export]
+
+    EX --> R1["EU ESPR Registry"]
+    EX --> R2["QR / NFC / RFID"]
+    EX --> R3["Brand portal"]
+    EX --> R4["Retailer systems"]
+    EX --> R5["Resale / recyclers"]
+    EX --> R6["Analytics"]
+
+    subgraph "Supply Chain"
+        T3
+        T2
+        T1
+        BR
+        CE
+    end
+
+    subgraph "THREAD Platform"
+        ING
+        CS
+        VE
+        EX
+    end
+
+    subgraph "Consumers"
+        R1
+        R2
+        R3
+        R4
+        R5
+        R6
+    end
 ```
 
 ## Layers
@@ -76,17 +105,11 @@ THREAD uses a **federated ownership, centralised assembly** model:
 
 ## Product vs. batch records
 
-```
-ProductDPP (GTIN level)
-└── static data that doesn't change per batch:
-    care instructions, repair info, end-of-life programme,
-    product name, category, model number
-
-BatchDPP (GTIN + lot level)
-└── inherits ProductDPP
-└── variable data per production run:
-    facility chain, carbon footprint, certifications,
-    chemical compliance, fibre origin, quantity
+```mermaid
+graph TD
+    PDPP["<b>ProductDPP</b> — GTIN level\ncare instructions · repair info · end-of-life\nproduct name · category · model number"]
+    BDPP["<b>BatchDPP</b> — GTIN + lot level\nfacility chain · carbon footprint · certifications\nchemical compliance · fibre origin · quantity"]
+    BDPP -->|inherits| PDPP
 ```
 
 This avoids duplicating unchanging product data across hundreds of batches.

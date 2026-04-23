@@ -9,22 +9,27 @@ This page walks through the complete lifecycle of a batch DPP — from the brand
 
 ## Overview
 
-```
-Brand                Tier 1 (CMT)         Tier 2 (Processing)    Tier 3 (Raw Material)
-  │                      │                       │                        │
-  ├─ Create product ──▶  │                       │                        │
-  ├─ Create batch ─────▶ │                       │                        │
-  ├─ Generate invite ──▶ │                       │                        │
-  │                      ├─ Submit T1 data ────▶ │                        │
-  │                      │   (facility, qty)     ├─ Submit T2 data ─────▶ │
-  │                      │                       │   (dyeing, chemicals)  ├─ Submit T3 data
-  │                      │                       │                        │   (fibre, certs)
-  │◀─────────────────────┼───────────────────────┼────────────────────────┘
-  ├─ Add brand layer ──▶ │                       │
-  │   (care, EOL info)   │                       │
-  ├─ Review completeness │                       │
-  ├─ Publish DPP ──────▶ EU Registry             │
-  └─ Activate QR code    │                       │
+```mermaid
+sequenceDiagram
+    participant Br as Brand
+    participant PL as THREAD Platform
+    participant T1 as Tier 1 (CMT)
+    participant T2 as Tier 2 (Processing)
+    participant T3 as Tier 3 (Raw Material)
+    participant EU as EU Registry
+
+    Br->>PL: Create product & batch
+    PL-->>Br: Scoped invite links
+    Br->>T1: Share invite link
+    Br->>T2: Share invite link
+    Br->>T3: Share invite link
+    T3->>PL: Submit T3 data (fibre, origin, certs)
+    T2->>PL: Submit T2 data (processing, chemicals)
+    T1->>PL: Submit T1 data (CMT facility, qty)
+    Br->>PL: Add brand layer (care, EOL)
+    Br->>PL: Validate completeness
+    Br->>EU: Publish DPP
+    Br->>Br: Activate QR code
 ```
 
 ## Step 1: Brand creates the product shell

@@ -1,11 +1,20 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import rehypeMermaid from 'rehype-mermaid';
 
 import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
   site: 'https://thread.textileeco.com',
+
+  markdown: {
+      syntaxHighlight: {
+          type: 'shiki',
+          excludeLangs: ['mermaid'],
+      },
+      rehypePlugins: [[rehypeMermaid, { strategy: 'img-svg', dark: true }]],
+  },
 
   integrations: [
       starlight({

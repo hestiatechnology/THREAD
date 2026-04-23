@@ -50,11 +50,19 @@ For unpublished (draft) DPPs, the endpoint returns `404` to unauthenticated requ
 
 The authoritative node for a given GTIN is identified via the GS1 Digital Link resolver. The redirect target's hostname is the authoritative node.
 
-```
-GET https://id.brand.com/01/0123456789012/10/B2026Q1-001
-→ 302 https://textileeco.com/dpp/0123456789012/B2026Q1-001
-                 ↑
-          this hostname is the authoritative THREAD node
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as id.brand.com
+    participant N as textileeco.com
+
+    Note over R: GS1 Digital Link Resolver
+    Note over N: THREAD Node
+    C->>R: GET /01/0123456789012/10/B2026Q1-001
+    R-->>C: 302 → https://textileeco.com/dpp/...
+    Note over C: hostname = authoritative THREAD node
+    C->>N: GET /dpp/0123456789012/B2026Q1-001
+    N-->>C: DPP JSON
 ```
 
 ---
