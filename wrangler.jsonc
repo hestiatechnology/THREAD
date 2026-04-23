@@ -9,5 +9,9 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"routes": {
+      "pattern": "thread.textileeco.com",
+      "custom_domain": true
+    }
 }
