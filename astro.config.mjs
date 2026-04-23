@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import mermaid from 'astro-mermaid';
 import starlight from '@astrojs/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 
 import cloudflare from '@astrojs/cloudflare';
 
@@ -11,6 +12,7 @@ export default defineConfig({
   integrations: [
       mermaid({ autoTheme: true }),
       starlight({
+          plugins: [starlightLlmsTxt()],
           title: 'THREAD',
           description: 'Textile Harmonised Record Exchange and Attestation Data — an open standard for textile Digital Product Passports, published by TextileEco.',
           social: [],
@@ -66,5 +68,5 @@ export default defineConfig({
       }),
   ],
 
-  adapter: cloudflare(),
+  adapter: cloudflare({ prerenderEnvironment: 'node' }),
 });
