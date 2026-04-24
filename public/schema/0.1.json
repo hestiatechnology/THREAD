@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://textileeco.com/schema.json",
+  "$id": "https://thread.textileeco.com/schema/0.1.json",
   "title": "THREAD Batch DPP",
-  "description": "Canonical schema for a batch-level textile Digital Product Passport. Open standard published by TextileEco. Version 1.0.",
+  "description": "Canonical schema for a batch-level textile Digital Product Passport. Open standard published by TextileEco. Version 0.1.",
   "type": "object",
   "required": ["dpp", "product", "batch", "materials", "manufacturing"],
   "additionalProperties": false,
