@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thread.textileeco.com/portable-package.schema.json",
+  "title": "THREAD Portable Package",
+  "description": "A JWS-signed envelope for cross-platform supplier data exchange in the THREAD standard.",
+  "type": "object",
+  "required": ["threadPackage", "gtin", "batchId", "tier", "data", "provenance", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "threadPackage": {
+      "type": "string",
+      "description": "Package format version.",
+      "enum": ["1.0"]
+    },
+    "gtin": {
+      "type": "string",
+      "description": "13-digit Global Trade Item Number.",
+      "pattern": "^\\d{13}$"
+    },
+    "batchId": {
+      "type": "string",
+      "description": "Batch identifier — must match the target DPP.",
+      "pattern": "^[A-Za-z0-9_-]{1,20}$"
+    },
+    "tier": {
+      "type": "string",
+      "description": "Supply chain tier that generated this package.",
+      "enum": ["brand", "tier1", "tier2", "tier3", "certifier"]
+    },
+    "data": {
+      "type": "object",
+      "description": "The tier's canonical THREAD data fields. Contents depend on the value of 'tier'.",
+      "minProperties": 1
+    },
+    "provenance": {
+      "type": "array",
+      "description": "Provenance attestations for each asserted field.",
+      "items": {
+        "$ref": "#/$defs/ProvenanceEntry"
+      }
+    },
+    "signature": {
+      "type": "object",
+      "description": "JWS signing metadata.",
+      "required": ["issuer", "issuedAt", "algorithm", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL of the issuing THREAD node. JWKS is fetched from {issuer}/.well-known/thread-keys.json."
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp when the package was signed. Packages older than 30 days are rejected on import."
+        },
+        "algorithm": {
+          "type": "string",
+          "description": "JWS signing algorithm.",
+          "enum": ["ES256", "RS256"]
+        },
+        "value": {
+          "type": "string",
+          "description": "JWS Detached Payload compact serialisation (header..signature, RFC 7515 §F). The payload (canonical JSON of the envelope excluding 'signature') is omitted from the JWS string and reconstructed by the verifier."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ProvenanceEntry": {
+      "type": "object",
+      "required": ["field", "assertedBy", "issuedBy", "evidenceType", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Dot-notation path to the asserted field (e.g. 'environmental.carbonFootprint')."
+        },
+        "assertedBy": {
+          "type": "object",
+          "required": ["id", "name", "role"],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Organisation identifier (URN or URI)."
+            },
+            "name": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["brand", "tier1-supplier", "tier2-supplier", "tier3-supplier", "certifier"]
+            }
+          }
+        },
+        "issuedBy": {
+          "type": "string",
+          "format": "uri",
+          "description": "Base URL of the THREAD node that packaged this assertion."
+        },
+        "evidenceType": {
+          "type": "string",
+          "enum": ["self-declared", "third-party-verified", "certification-body"]
+        },
+        "method": {
+          "type": "string",
+          "description": "How the data reached the receiving node.",
+          "enum": ["portable-package", "direct-api", "file-upload", "web-form"]
+        },
+        "certificationId": {
+          "type": "string",
+          "description": "Certificate reference when evidenceType is 'certification-body'."
+        }
+      }
+    }
+  }
+}

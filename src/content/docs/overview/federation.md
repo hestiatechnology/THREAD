@@ -96,13 +96,23 @@ A supplier on Platform B can export their data block as a **THREAD Portable Pack
   },
   "provenance": [ ... ],
   "signature": {
-    "issuer": "https://platform-b.textileeco.com",
-    "issuedAt": "2026-04-21T10:00:00Z",
+    "issuer": "https://platform-b.example.com",
+    "issuedAt": "2026-04-24T10:00:00Z",
     "algorithm": "ES256",
     "value": "eyJ..."
   }
 }
 ```
+
+Each tier includes its own canonical data fields in the `data` object:
+
+| Tier | Fields in `data` |
+|---|---|
+| `brand` | Product shell, care instructions, end-of-life |
+| `tier1` | CMT/assembly facility, social compliance |
+| `tier2` | Dyeing/finishing facility, environmental data, chemicals |
+| `tier3` | Raw materials, fibre certifications, spinning/yarn stages |
+| `certifier` | Certification status, scope, validity |
 
 The supplier downloads this package from Platform B and submits it to Platform A via the REST API:
 
@@ -113,7 +123,7 @@ Content-Type: application/json
 { ...portable package... }
 ```
 
-Platform A verifies the package signature against the issuing node's public key (fetched from `https://platform-b.textileeco.com/.well-known/thread-keys.json`) and imports the data with provenance intact.
+Platform A verifies the package signature against the issuing node's public key (fetched from `https://platform-b.example.com/.well-known/thread-keys.json`) and imports the data with provenance intact.
 
 The resulting provenance entry records both the original supplier and the issuing node:
 
@@ -121,11 +131,13 @@ The resulting provenance entry records both the original supplier and the issuin
 {
   "field": "environmental.carbonFootprint",
   "assertedBy": { "id": "...", "name": "XYZ Dyehouse", "role": "tier2-supplier" },
-  "issuedBy": "https://platform-b.textileeco.com",
+  "issuedBy": "https://platform-b.example.com",
   "evidenceType": "self-declared",
   "method": "portable-package"
 }
 ```
+
+For the full envelope specification, JWS signing requirements, and verification flow, see the [Portable Package Format](/reference/portable-package) reference.
 
 ---
 
