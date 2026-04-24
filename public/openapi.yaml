@@ -62,6 +62,7 @@ paths:
       tags: [Products]
       security:
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
       requestBody:
@@ -110,6 +111,7 @@ paths:
       tags: [Products]
       security:
         - bearerAuth: [dpp:brand:read]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
       responses:
@@ -131,6 +133,7 @@ paths:
       tags: [Batches]
       security:
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
       requestBody:
@@ -171,6 +174,7 @@ paths:
       tags: [Batches]
       security:
         - bearerAuth: [dpp:brand:read]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -201,6 +205,7 @@ paths:
       security:
         - apiKey: []
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -452,6 +457,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -492,6 +498,7 @@ paths:
       tags: [Completeness & Publishing]
       security:
         - bearerAuth: [dpp:brand:read]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -530,6 +537,7 @@ paths:
       tags: [Completeness & Publishing]
       security:
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -653,6 +661,7 @@ paths:
       tags: [Federation]
       security:
         - bearerAuth: [dpp:brand:write]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -694,6 +703,7 @@ paths:
       tags: [Federation]
       security:
         - bearerAuth: [dpp:brand:read]
+        - apiKey: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -721,6 +731,7 @@ paths:
       tags: [Webhooks]
       security:
         - bearerAuth: [dpp:brand:read]
+        - apiKey: []
       requestBody:
         required: true
         content:
