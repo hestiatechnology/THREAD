@@ -18,7 +18,7 @@ Brand back-office systems use API keys for server-to-server integrations. Keys a
 **Format:** `thr_live_{32 alphanumeric chars}` (production) · `thr_test_{32 alphanumeric chars}` (sandbox)
 
 ```http
-X-API-Key: thr_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+X-API-Key: thr_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 API keys carry `dpp:brand:write` + `dpp:brand:read` privileges by default. They do not expire but can be revoked instantly from the dashboard. When rotating a key, the old key stays valid for **24 hours** to allow zero-downtime deployments.
