@@ -40,6 +40,7 @@
 
     "facilityId": {
       "type": "string",
+      "pattern": "^urn:(gs1:414:[0-9]{13}|thread:facility:[A-Z]{2}:[A-Za-z0-9_-]+)$",
       "description": "Facility identifier. Canonical form is a GLN URN (urn:gs1:414:{gln13}). Interim self-assigned form is urn:thread:facility:{iso-country}:{internal-id}.",
       "examples": [
         "urn:gs1:414:4061234500003",

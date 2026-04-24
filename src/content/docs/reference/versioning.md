@@ -46,11 +46,13 @@ A MINOR version increment covers additive or relaxing changes that do not break 
 | Scenario | Node behaviour |
 |---|---|
 | DPP `schemaVersion` MAJOR == node MAJOR | Accept and validate normally |
-| DPP `schemaVersion` MINOR > node MINOR | Accept; unknown optional fields SHOULD be preserved, not stripped |
-| DPP `schemaVersion` MAJOR > node MAJOR | Reject with HTTP `409 Conflict`; return `schemaVersion` in error body |
+| DPP `schemaVersion` MINOR > node MINOR | Accept; node fetches and validates against the DPP's declared schema version; unknown optional fields MUST be preserved, not stripped |
+| DPP `schemaVersion` MAJOR > node MAJOR | Reject with HTTP `422 Unprocessable Entity`; return `schemaVersion` in error body |
 | DPP `schemaVersion` MAJOR < node MAJOR | Accept via compatibility adapter (see [Compatibility bridge](#compatibility-bridge)) |
 
-When rejecting a DPP due to a version mismatch, nodes MUST return a response body that includes the `schemaVersion` value they support, so the sender can route the DPP to an appropriate node or apply an adapter.
+**Validation always uses the schema version declared in `dpp.schemaVersion`**, not the node's own current schema version. This is what makes forward compatibility work: a node that doesn't yet have the v1.1 schema rejects the DPP, but a node that has fetched v1.1 validates correctly against it, even if v1.2 is the node's "current" version.
+
+When rejecting a DPP due to an unsupported schema version, nodes MUST return a response body that includes the highest `schemaVersion` they support, so the sender can route the DPP to an appropriate node or apply an adapter.
 
 ---
 
