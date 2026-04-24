@@ -78,11 +78,13 @@ The fields included in the payload are:
 
 ### JWS structure
 
-THREAD uses JWS compact serialisation (RFC 7515):
+THREAD uses **JWS Detached Payload** (RFC 7515, Appendix F). The payload is omitted from the JWS string to avoid double-encoding the envelope data:
 
 ```
-BASE64URL(header) . BASE64URL(payload) . BASE64URL(signature)
+BASE64URL(header) . . BASE64URL(signature)
 ```
+
+The verifier reconstructs the payload from the canonical JSON of the top-level envelope fields (excluding `signature`) before verifying. This keeps the `signature.value` compact regardless of `data` size.
 
 **Protected header:**
 
@@ -111,9 +113,9 @@ BASE64URL(header) . BASE64URL(payload) . BASE64URL(signature)
 
 1. Construct the `data`, `provenance`, and envelope fields.
 2. Serialise the payload as canonical JSON (keys sorted, no whitespace).
-3. Compute the JWS: `BASE64URL(header) || '.' || BASE64URL(payload)`.
-4. Sign the JWS signing input using the node's private key.
-5. Set `signature.value` to the resulting compact serialisation.
+3. Construct the JWS Signing Input: `BASE64URL(header) || '.' || BASE64URL(payload)`.
+4. Sign the JWS Signing Input using the node's private key.
+5. Set `signature.value` to `BASE64URL(header) || '..' || BASE64URL(signature)` (detached — no payload).
 6. Set `signature.algorithm` to match the `alg` header value.
 7. Set `signature.issuedAt` to the current UTC time.
 
@@ -297,7 +299,7 @@ A full Portable Package from a Tier-2 supplier:
     "issuer": "https://platform-b.example.com",
     "issuedAt": "2026-04-24T10:00:00Z",
     "algorithm": "ES256",
-    "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRocmVhZC1zaWduaW5nLTIwMjYtMDQiLCJ0eXAiOiJ0aHJlYWQtcGFja2FnZStqc29uIn0.eyJiYXRjaElkIjoiQjIwMjZRMS0wMDEiLCJkYXRhIjp7fSwiZ3RpbiI6IjAxMjM0NTY3ODkwMTIiLCJwcm92ZW5hbmNlIjpbXSwidGhyZWFkUGFja2FnZSI6IjEuMCIsInRpZXIiOiJ0aWVyMiJ9.EXAMPLE_SIGNATURE_VALUE_NOT_VALID"
+    "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6InRocmVhZC1zaWduaW5nLTIwMjYtMDQiLCJ0eXAiOiJ0aHJlYWQtcGFja2FnZStqc29uIn0..EXAMPLE_SIGNATURE_NOT_VALID"
   }
 }
 ```

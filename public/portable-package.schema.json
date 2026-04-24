@@ -62,7 +62,7 @@
         },
         "value": {
           "type": "string",
-          "description": "JWS compact serialisation (header.payload.signature). The payload is the canonical JSON of the envelope excluding this signature field."
+          "description": "JWS Detached Payload compact serialisation (header..signature, RFC 7515 §F). The payload (canonical JSON of the envelope excluding 'signature') is omitted from the JWS string and reconstructed by the verifier."
         }
       }
     }
@@ -70,7 +70,7 @@
   "$defs": {
     "ProvenanceEntry": {
       "type": "object",
-      "required": ["field", "assertedBy", "issuedBy", "evidenceType"],
+      "required": ["field", "assertedBy", "issuedBy", "evidenceType", "method"],
       "additionalProperties": false,
       "properties": {
         "field": {
