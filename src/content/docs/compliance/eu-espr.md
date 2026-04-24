@@ -158,14 +158,14 @@ The following is an example export for a published cotton T-shirt DPP.
     {
       "fibre": "organic cotton",
       "percentage": 95,
-      "recycledContent": 0,
+      "fibreRecycledContent": 0,
       "materialOrigin": { "originCountry": "IN", "originRegion": "Gujarat" },
       "certifications": ["GOTS"]
     },
     {
       "fibre": "elastane",
       "percentage": 5,
-      "recycledContent": 0,
+      "fibreRecycledContent": 0,
       "certifications": []
     }
   ],

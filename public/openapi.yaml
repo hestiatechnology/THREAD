@@ -675,14 +675,14 @@ paths:
                     materials:
                       - fibre: organic cotton
                         percentage: 95
-                        recycledContent: 0
+                        fibreRecycledContent: 0
                         materialOrigin:
                           originCountry: IN
                           originRegion: Gujarat
                         certifications: [GOTS]
                       - fibre: elastane
                         percentage: 5
-                        recycledContent: 0
+                        fibreRecycledContent: 0
                         certifications: []
                     manufacturing:
                       - stage: spinning
@@ -1430,7 +1430,7 @@ components:
           description: Fibre composition — percentages must sum to 100
           items:
             type: object
-            required: [fibre, percentage, recycledContent]
+            required: [fibre, percentage, fibreRecycledContent]
             properties:
               fibre:
                 type: string
@@ -1439,7 +1439,7 @@ components:
                 type: number
                 minimum: 0
                 maximum: 100
-              recycledContent:
+              fibreRecycledContent:
                 type: number
                 minimum: 0
                 maximum: 100
@@ -1508,6 +1508,7 @@ components:
               description: '[speculative]'
         compliance:
           type: object
+          required: [reachSVHC]
           properties:
             reachSVHC:
               type: array
