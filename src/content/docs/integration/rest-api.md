@@ -9,23 +9,105 @@ The REST API is the primary integration method for brands, large suppliers, and 
 
 ## Authentication
 
-THREAD uses OAuth 2.0 with scoped tokens. Each supply chain participant is issued a token scoped to their tier and organisation.
+THREAD supports three authentication methods depending on the integration type.
+
+### API keys — machine-to-machine (ERP / PLM)
+
+Brand back-office systems use API keys for server-to-server integrations. Keys are scoped to a single organisation and issued from the TextileEco dashboard.
+
+**Format:** `thr_live_{32 alphanumeric chars}` (production) · `thr_test_{32 alphanumeric chars}` (sandbox)
+
+```http
+X-API-Key: thr_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+```
+
+API keys carry `dpp:brand:write` + `dpp:brand:read` privileges by default. They do not expire but can be revoked instantly from the dashboard. When rotating a key, the old key stays valid for **24 hours** to allow zero-downtime deployments.
+
+### OAuth 2.0 — supplier system integrations
+
+Suppliers with their own systems use OAuth 2.0 client credentials. Each participant is issued a client ID and secret scoped to their tier.
+
+```
+POST https://auth.textileeco.com/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={client_id}
+&client_secret={client_secret}
+&scope=dpp:tier2:write
+```
 
 ```http
 Authorization: Bearer {access_token}
 ```
 
+OAuth access tokens expire after **1 hour**. Clients must request a fresh token before expiry — the token response includes `expires_in` for this purpose.
+
 Token scopes map to supply chain roles:
 
-| Scope | Access |
-|---|---|
-| `dpp:brand:write` | Brand layer (product, care, end-of-life) |
-| `dpp:tier1:write` | Tier-1 layer (CMT facility, social certs) |
-| `dpp:tier2:write` | Tier-2 layer (processing, chemicals) |
-| `dpp:tier3:write` | Tier-3 layer (raw material, fibre certs) |
-| `dpp:certifier:write` | Certification layer (push verified cert status) |
-| `dpp:read` | Read-only access to own-tier data |
-| `dpp:brand:read` | Read access to full DPP (brand only) |
+| Scope | Role | Access |
+|---|---|---|
+| `dpp:brand:write` | Brand | Product shell, care instructions, end-of-life |
+| `dpp:tier1:write` | Tier 1 | CMT facility, manufacturing stage, social compliance |
+| `dpp:tier2:write` | Tier 2 | Processing facility, chemicals, dyeing |
+| `dpp:tier3:write` | Tier 3 | Raw material origin, fibre certifications |
+| `dpp:certifier:write` | Certifier | Push verified certification status |
+| `dpp:read` | Any | Read own-tier data |
+| `dpp:brand:read` | Brand | Read the full DPP across all tiers |
+
+Cross-tier writes are rejected with `403` — a `dpp:tier2:write` token cannot write to Tier-3 fields.
+
+### Scoped invite tokens — supplier onboarding
+
+For suppliers who cannot integrate via API or CSV, brands generate a short-lived invite token scoped to a single tier, GTIN, and batch. The supplier follows the link on any device.
+
+**Generate an invite token:**
+
+```http
+POST /products/{gtin}/batches/{batchId}/invite-tokens
+X-API-Key: thr_live_...
+Content-Type: application/json
+
+{
+  "tier": "tier2",
+  "expiresIn": 604800
+}
+```
+
+**Response:**
+```json
+{
+  "token": "thr_inv_q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2",
+  "url": "https://app.textileeco.com/contribute/thr_inv_q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2",
+  "tier": "tier2",
+  "scope": {
+    "gtin": "0123456789012",
+    "batchId": "B2026Q1-001"
+  },
+  "expiresAt": "2026-05-01T00:00:00Z"
+}
+```
+
+The brand shares the `url` with the supplier. Opening it on mobile routes to the Tier C web form. To use the token directly against the API, pass it as a bearer token:
+
+```http
+Authorization: Bearer thr_inv_q7r8s9t0u1v2...
+```
+
+**Invite token constraints:**
+
+- Scoped to exactly one tier, one GTIN, and one batch — no other resource is accessible
+- Maximum lifetime is **7 days** (`expiresIn` max: `604800`)
+- Invalidated after the first successful data write — single-use per contribution window
+- Cannot be renewed; generate a new token for each contribution window
+
+### Token lifetime summary
+
+| Method | Header | Lifetime | Rotation |
+|---|---|---|---|
+| API key | `X-API-Key` | Non-expiring | Rotate via dashboard; 24 h overlap |
+| OAuth token | `Authorization: Bearer` | 1 hour | Client credentials flow |
+| Invite token | `Authorization: Bearer` | Up to 7 days | Generate a new token |
 
 ## Base URL
 
