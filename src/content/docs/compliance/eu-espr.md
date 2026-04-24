@@ -40,7 +40,7 @@ THREAD tracks the CIRPASS-2 pilot outputs and EU Commission working documents to
 | Carbon footprint | `environmental.carbonFootprint` (`value` + `scope` + `methodology`) | Required | **0.15** | ⚠ All three sub-fields required together |
 | Substances of concern (SVHC) | `compliance.reachSVHC` | Required | **0.12** | Array required; empty = none detected (must be explicit) |
 | Recycled content | `circularEconomy.recycledContent` | Required | **0.10** | Number 0–100 (% of total product weight) |
-| Recyclability | `circularEconomy.recyclabilityScore` + `recyclabilityBasis` | Required | **0.08** | `recyclabilityBasis` required when score is `medium` or `low` |
+| Recyclability | `circularEconomy.recyclabilityScore` + `circularEconomy.recyclabilityBasis` | Required | **0.08** | `circularEconomy.recyclabilityBasis` required when score is `medium` or `low` |
 | Durability / repairability | `circularEconomy.repairInfo` | Required | **0.08** | Valid URI to repair instructions or spare parts |
 | End-of-life options | `circularEconomy.endOfLifeOptions` | Required | **0.07** | At least one option from the defined enum |
 | Care instructions | `care.washSymbols` | Required | **0.07** | At least one valid ISO 3758 / GINETEX code |
@@ -91,8 +91,7 @@ For a non-EU brand, `euImporter` becomes applicable (`applicable_i = 1`), the de
 
 | Score | `espr.status` | Publishable |
 |---|---|---|
-| `< 0.60` | `incomplete` | No |
-| `0.60 – 0.99` | `incomplete` | No |
+| `< 1.0` | `incomplete` | No |
 | `1.0` | `complete` | Yes |
 
 ---
