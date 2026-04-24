@@ -1,0 +1,72 @@
+{
+  "@context": {
+    "@version": 1.1,
+
+    "thread": "https://thread.textileeco.com/vocab/",
+    "gs1":    "https://gs1.org/voc/",
+    "schema": "http://schema.org/",
+    "xsd":    "http://www.w3.org/2001/XMLSchema#",
+
+    "BatchDPP": "thread:BatchDPP",
+
+    "schemaVersion":    "thread:schemaVersion",
+    "issuedAt":         { "@id": "schema:datePublished", "@type": "xsd:dateTime" },
+    "status":           "thread:dppStatus",
+    "completenessScore":{ "@id": "thread:completenessScore", "@type": "xsd:decimal" },
+
+    "gtin":          "gs1:gtin",
+    "batchId":       "gs1:batchLotNumber",
+    "productName":   "gs1:productName",
+    "modelNumber":   "gs1:productModelNumber",
+    "countryOfOrigin": "gs1:countryOfOrigin",
+
+    "euImporter":    "thread:euImporter",
+    "importerName":  "schema:name",
+    "importerCountry": "schema:addressCountry",
+    "vatNumber":     "thread:vatNumber",
+
+    "materials": { "@id": "thread:hasMaterial", "@container": "@set" },
+    "fibre":                "thread:fibreType",
+    "percentage":           { "@id": "thread:fibrePercentage",            "@type": "xsd:decimal" },
+    "fibreRecycledContent": { "@id": "thread:fibreRecycledContentPercentage", "@type": "xsd:decimal" },
+    "materialOrigin":       "thread:fibreOrigin",
+    "originCountry":        "schema:addressCountry",
+    "originRegion":         "schema:addressRegion",
+    "certifications":       { "@id": "thread:hasCertification", "@container": "@set" },
+
+    "manufacturing": { "@id": "thread:hasManufacturingStage", "@container": "@list" },
+    "stage":          "thread:manufacturingStageType",
+    "facilityId":     "schema:identifier",
+    "facilityName":   "schema:name",
+    "facilityCountry":"schema:addressCountry",
+    "facilityCity":   "schema:addressLocality",
+
+    "environmental":   "thread:environmentalData",
+    "carbonFootprint": "thread:carbonFootprint",
+    "cfValue":         { "@id": "thread:carbonFootprintValue", "@type": "xsd:decimal" },
+    "cfUnit":          "thread:carbonFootprintUnit",
+    "cfScope":         "thread:carbonFootprintScope",
+    "cfMethodology":   "thread:carbonFootprintMethodology",
+    "waterConsumption":"thread:waterConsumption",
+    "waterValue":      { "@id": "thread:waterConsumptionValue", "@type": "xsd:decimal" },
+    "waterUnit":       "thread:waterConsumptionUnit",
+    "microplasticRisk":"thread:microplasticRisk",
+
+    "compliance":  "thread:complianceData",
+    "reachSVHC":   { "@id": "thread:reachSVHC", "@container": "@set" },
+    "cas":         "thread:casRegistryNumber",
+    "substanceName":"schema:name",
+    "concentration":{ "@id": "thread:concentration", "@type": "xsd:decimal" },
+    "zdhcMRSL":    "thread:zdhcMRSLStatus",
+
+    "circularEconomy":    "thread:circularEconomyData",
+    "recycledContent":    { "@id": "thread:productRecycledContentPercentage", "@type": "xsd:decimal" },
+    "recyclabilityScore": "thread:recyclabilityScore",
+    "recyclabilityBasis": "thread:recyclabilityBasis",
+    "repairInfo":         { "@id": "thread:repairInfoUrl", "@type": "@id" },
+    "endOfLifeOptions":   { "@id": "thread:endOfLifeOption", "@container": "@set" },
+
+    "care":        "thread:careData",
+    "washSymbols": { "@id": "thread:careSymbol", "@container": "@set" }
+  }
+}
