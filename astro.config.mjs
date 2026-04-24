@@ -64,6 +64,12 @@ export default defineConfig({
                       { label: 'Standards Alignment', slug: 'compliance/standards' },
                   ],
               },
+              {
+                  label: 'Reference',
+                  items: [
+                      { label: 'Schema Versioning & Migration', slug: 'reference/versioning' },
+                  ],
+              },
           ],
       }),
   ],
