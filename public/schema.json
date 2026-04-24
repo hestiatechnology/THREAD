@@ -1,14 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://thread.textileeco.com/schema.json",
+  "$id": "https://textileeco.com/schema.json",
   "title": "THREAD Batch DPP",
-  "description": "Canonical schema for a batch-level textile Digital Product Passport. Open standard published by TextileEco. Version 1.0.0.",
+  "description": "Canonical schema for a batch-level textile Digital Product Passport. Open standard published by TextileEco. Version 1.0.",
   "type": "object",
   "required": ["dpp", "product", "batch", "materials", "manufacturing"],
   "additionalProperties": false,
 
   "$defs": {
-
     "isoCountry": {
       "type": "string",
       "pattern": "^[A-Z]{2}$",
@@ -153,7 +152,13 @@
 
     "provenanceEntry": {
       "type": "object",
-      "required": ["field", "assertedBy", "assertedAt", "evidenceType", "method"],
+      "required": [
+        "field",
+        "assertedBy",
+        "assertedAt",
+        "evidenceType",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
         "field": {
@@ -190,11 +195,9 @@
         "method": { "$ref": "#/$defs/ingestionMethod" }
       }
     }
-
   },
 
   "properties": {
-
     "dpp": {
       "type": "object",
       "description": "DPP record metadata.",
@@ -205,7 +208,8 @@
         "schemaVersion": {
           "type": "string",
           "pattern": "^[0-9]+\\.[0-9]+$",
-          "description": "THREAD schema version used for this record."
+          "description": "THREAD schema version used for this record.",
+          "examples": ["1.0"]
         },
         "status": {
           "type": "string",
@@ -324,7 +328,13 @@
     "batch": {
       "type": "object",
       "description": "Batch/lot identity. Variable per production run.",
-      "required": ["batchId", "productionDate", "quantity", "unit", "countryOfOrigin"],
+      "required": [
+        "batchId",
+        "productionDate",
+        "quantity",
+        "unit",
+        "countryOfOrigin"
+      ],
       "additionalProperties": false,
       "properties": {
         "batchId": { "$ref": "#/$defs/batchId" },
@@ -618,10 +628,6 @@
             "status": {
               "type": "string",
               "enum": ["incomplete", "complete", "published"]
-            },
-            "verifiedAt": {
-              "type": "string",
-              "format": "date-time"
             }
           }
         }
@@ -653,6 +659,5 @@
       "description": "Immutable attestation log. One entry per data block submission. Written by the platform; not submitted by users.",
       "items": { "$ref": "#/$defs/provenanceEntry" }
     }
-
   }
 }
