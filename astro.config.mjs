@@ -68,6 +68,7 @@ export default defineConfig({
                   label: 'Reference',
                   items: [
                       { label: 'Schema Versioning & Migration', slug: 'reference/versioning' },
+                      { label: 'Portable Package Format', slug: 'reference/portable-package' },
                   ],
               },
           ],
