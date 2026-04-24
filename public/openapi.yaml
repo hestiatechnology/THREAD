@@ -203,7 +203,6 @@ paths:
         token against the API. Invalidated after the first successful data write.
       tags: [Batches]
       security:
-        - apiKey: []
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
@@ -255,6 +254,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:tier3:write]
+        - inviteToken: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -304,6 +304,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:tier1:write, dpp:tier2:write, dpp:tier3:write]
+        - inviteToken: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -343,6 +344,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:tier2:write]
+        - inviteToken: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -386,6 +388,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:tier1:write]
+        - inviteToken: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
@@ -422,6 +425,7 @@ paths:
       tags: [Supply Chain Data]
       security:
         - bearerAuth: [dpp:tier1:write, dpp:brand:write]
+        - inviteToken: []
       parameters:
         - $ref: '#/components/parameters/gtin'
         - $ref: '#/components/parameters/batchId'
