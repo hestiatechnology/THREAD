@@ -1051,6 +1051,9 @@ components:
               pattern: '^[A-Z]{2}$'
             vatNumber:
               type: string
+            address:
+              type: string
+              description: Full registered address of the EU importer
 
     ProductResponse:
       allOf:
@@ -1174,6 +1177,11 @@ components:
               pattern: '^[A-Z]{2}$'
             city:
               type: string
+            certifications:
+              type: array
+              items:
+                type: string
+              description: Facility-level certifications (e.g. SA8000, ISO 14001)
 
     EnvironmentalData:
       type: object
@@ -1188,7 +1196,7 @@ components:
               enum: [kgCO2e]
             scope:
               type: string
-              enum: [cradle-to-gate, cradle-to-grave]
+              enum: [cradle-to-gate, cradle-to-grave, cradle-to-cradle]
             methodology:
               type: string
               description: e.g. "Higg MSI", "ISO 14067"
@@ -1274,6 +1282,23 @@ components:
               - home-compostable
               - industrial-compostable
               - textile-recycler
+
+    CareData:
+      type: object
+      properties:
+        washSymbols:
+          type: array
+          items:
+            type: string
+            description: ISO 3758 / GINETEX care symbol code
+        expectedLifetimeWashes:
+          type: integer
+          minimum: 1
+          description: Expected number of wash cycles before end of usable life
+        expectedLifetimeYears:
+          type: number
+          minimum: 0
+          description: Expected usable lifetime in years
 
     ProvenanceEntry:
       type: object
@@ -1361,6 +1386,21 @@ components:
           $ref: '#/components/schemas/CircularEconomyData'
         compliance:
           $ref: '#/components/schemas/ComplianceData'
+        care:
+          $ref: '#/components/schemas/CareData'
+        externalRefs:
+          type: array
+          description: Proprietary system identifiers (SAP, PLM, etc.) — never used for routing
+          items:
+            type: object
+            required: [system, id]
+            properties:
+              system:
+                type: string
+                description: Name of the source system (e.g. SAP-ERP, Centric-PLM)
+              id:
+                type: string
+                description: Identifier within that system
         provenance:
           type: array
           items:
@@ -1625,7 +1665,7 @@ components:
                   enum: [kgCO2e]
                 cfScope:
                   type: string
-                  enum: [cradle-to-gate, cradle-to-grave]
+                  enum: [cradle-to-gate, cradle-to-grave, cradle-to-cradle]
                 cfMethodology:
                   type: string
                   description: e.g. "Higg MSI", "ISO 14067"
