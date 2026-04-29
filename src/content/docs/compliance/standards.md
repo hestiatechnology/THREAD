@@ -15,6 +15,21 @@ THREAD does not define new standards — it implements existing open standards a
 
 **Why it matters:** The EU ESPR draft guidance recommends GS1 Digital Link as the carrier technology. Adopting it now ensures forward compatibility.
 
+### GS1 Digital Link URI → THREAD endpoint mapping
+
+A GS1 Digital Link URI encodes the GTIN and batch/lot. THREAD maps it to the public DPP read endpoint as follows:
+
+| GS1 Digital Link URI | THREAD endpoint |
+|---|---|
+| `https://id.{brand-domain}/01/{GTIN}/10/{BatchID}` | Resolver redirects → `GET /thread/v1/dpp/{gtin}/{batchId}` |
+| `https://id.textileeco.com/01/0123456789012/10/B2026Q1-001` | `GET https://api.textileeco.com/thread/v1/dpp/0123456789012/B2026Q1-001` |
+
+The GS1 application identifiers used are:
+- `01` — GTIN (14 digits; THREAD uses GTIN-13 left-padded with a leading zero)
+- `10` — Batch/lot number
+
+Serial-level application identifiers (`21`) are not used — THREAD DPPs are issued at batch granularity, not item level.
+
 **Reference:** [gs1.org/standards/gs1-digital-link](https://www.gs1.org/standards/gs1-digital-link)
 
 ---
@@ -23,17 +38,34 @@ THREAD does not define new standards — it implements existing open standards a
 
 **What it is:** Electronic Product Code Information Services — a GS1 standard for sharing supply chain event data (what happened, where, when, to what product or batch).
 
-**THREAD alignment:** THREAD's `manufacturing[]` array maps to EPCIS `TransformationEvent` records. Brands and suppliers who already use EPCIS 2.0 can submit their event stream to THREAD via the API; the adapter layer maps EPCIS events to THREAD's manufacturing schema.
+**THREAD alignment:** THREAD's `manufacturing[]` array maps to EPCIS `TransformationEvent` and `ObjectEvent` records. Brands and suppliers who already use EPCIS 2.0 can submit their event stream to THREAD via the API; the adapter layer maps EPCIS events to THREAD's manufacturing schema.
 
-**EPCIS event → THREAD field mapping:**
+### Identifier scheme alignment
 
-| EPCIS field | THREAD field |
-|---|---|
-| `eventTime` | `batch.productionDate` |
-| `readPoint.id` | `manufacturing[].facility.id` |
-| `bizStep` | `manufacturing[].stage` |
-| `inputEPCList` | `materials[].supplierRef` |
-| `outputEPCList` | `dpp.id` |
+| EPCIS identifier | THREAD field | Notes |
+|---|---|---|
+| `lgtin` (GTIN + lot/batch) | `product.gtin` + `batch.batchId` | Direct equivalent — preferred EPCIS identifier for THREAD |
+| `sgtin` (GTIN + serial) | `product.gtin` + `batch.batchId` | Serial number is dropped; THREAD operates at batch level |
+| `bizLocation.id` (GLN) | `manufacturing[].facility.id` | GLN encoded as `urn:gs1:id:gln:{gln}` |
+| `readPoint.id` | `manufacturing[].facility.id` | Same facility reference |
+| `eventTime` | `batch.productionDate` | THREAD uses YYYY-MM precision; EPCIS uses full ISO 8601 |
+| `inputEPCList` | `materials[].supplierRef` | Supplier GLN or URN |
+| `outputEPCList` | `dpp.id` | GS1 Digital Link URI of the resulting DPP |
+| `bizStep` | `manufacturing[].stage` | See stage mapping below |
+| `disposition` | — | Not mapped; THREAD uses `dpp.status` (`draft` / `published`) |
+
+### EPCIS `bizStep` → THREAD `manufacturing[].stage`
+
+| EPCIS `bizStep` (CBV Web URI) | THREAD `stage` value | Notes |
+|---|---|---|
+| `https://ref.gs1.org/cbv/bizstep/transforming` | `spinning` or `weaving_knitting` | Fibre-to-yarn or yarn-to-fabric transformation |
+| `https://ref.gs1.org/cbv/bizstep/dyeing` | `dyeing_finishing` | THREAD combines dyeing and finishing into one stage |
+| `https://ref.gs1.org/cbv/bizstep/assembling` | `cut_make_trim` | Cut, make, trim / garment assembly |
+| `https://ref.gs1.org/cbv/bizstep/packing` | `logistics` | Packing and outbound logistics |
+| `https://ref.gs1.org/cbv/bizstep/shipping` | `logistics` | Same stage as packing in THREAD |
+| `https://ref.gs1.org/cbv/bizstep/harvesting` | `raw_material` | Raw fibre harvest or ginning |
+| `https://ref.gs1.org/cbv/bizstep/commissioning` | — | No THREAD equivalent; product creation uses the product shell endpoint |
+| `https://ref.gs1.org/cbv/bizstep/inspecting` | — | Not mapped; quality control is tracked separately in THREAD |
 
 **Reference:** [gs1.org/standards/epcis](https://www.gs1.org/standards/epcis)
 
@@ -44,9 +76,25 @@ THREAD does not define new standards — it implements existing open standards a
 **What it is:** A UN/CEFACT initiative defining open protocols for supply chain transparency, including a Digital Product Passport schema, Digital Traceability Events, and Digital Conformity Credentials using W3C Verifiable Credentials.
 
 **THREAD alignment:** THREAD's schema is structurally compatible with the UNTP DPP specification. Key alignments:
-- THREAD's `provenance[]` array implements UNTP's Digital Conformity Credential concept
+- THREAD's `provenance[]` array implements the same concept as UNTP's Digital Conformity Credential
 - W3C Verifiable Credentials are accepted as `evidenceRef` values in provenance entries
 - THREAD's batch traceability model aligns with UNTP's Digital Traceability Event structure
+
+### THREAD Portable Package vs UNTP Digital Conformity Credential
+
+Both represent a portable, signed attestation that data originated from a specific party. The structural differences are:
+
+| Aspect | THREAD Portable Package | UNTP Digital Conformity Credential |
+|---|---|---|
+| Serialisation | Plain JSON with JWS compact signature | JSON-LD with W3C VC proof block |
+| Signing algorithm | ES256 or RS256 (JWS) | W3C Data Integrity or JWT-VC |
+| Issuer identity | Node base URL + public key at `/.well-known/thread-keys.json` | DID (Decentralised Identifier) |
+| Scope | One supply chain tier's data slice for one GTIN + batch | Conformity claim against a named standard or regulation |
+| Transport | Submitted to a THREAD node via `POST .../import-package` | Presented as a bearer token or linked credential |
+| Revocation | Re-issue a new package; no formal revocation mechanism | DID-based credential revocation registry |
+| Schema binding | THREAD canonical schema sections | UNTP conformity credential schema |
+
+**Convergence intent:** As UNTP matures, THREAD Portable Packages will converge with UNTP VCs. See the [Federation & Interoperability](/overview/federation) page for the convergence roadmap.
 
 **Current status:** UNTP is still in draft (as of 2025–2026). The textile extension is not yet finalised. THREAD will adopt UNTP Digital Conformity Credentials as a first-class evidence type when the spec matures.
 
@@ -146,6 +194,36 @@ GOTS maintains a public database of valid certificates at `global-standard.org/p
 | `"compliant"` | Facility has confirmed compliance with ZDHC MRSL |
 | `"non-compliant"` | Non-compliance identified |
 | `"not-assessed"` | ZDHC MRSL status has not been evaluated |
+
+---
+
+## Intentional divergences from GS1 and UNTP
+
+THREAD deliberately diverges from GS1 EPCIS and UNTP in three areas. Each divergence is a design trade-off, not an oversight.
+
+### 1. Batch granularity over item-level serialisation
+
+GS1 EPCIS and GS1 Digital Link support item-level serialisation via `sgtin` and application identifier `21`. THREAD does not use serial numbers.
+
+**Reason:** EU ESPR requires a DPP per product model/batch, not per individual item. Textile production volumes make item-level serialisation impractical for most brands. Batch-level DPPs are the appropriate granularity for the regulatory context.
+
+**Impact:** THREAD cannot represent item-level provenance divergences within a batch (e.g. one unit in a batch that used a different supplier). This is accepted as out of scope for v1.0.
+
+### 2. Plain JSON over JSON-LD for the primary schema
+
+THREAD's canonical schema is plain JSON, not JSON-LD. JSON-LD is only used for the ESPR registry export endpoint (`/export/espr-registry`).
+
+**Reason:** JSON-LD adds implementation complexity — context resolution, IRI expansion, and tooling requirements — that creates a barrier for small suppliers and lightweight node implementors. THREAD prioritises broad accessibility. The ESPR registry export uses JSON-LD because the registry requires it.
+
+**Impact:** THREAD field paths are not globally resolvable IRIs. The `espr-context.jsonld` file bridges this gap for registry submissions, but THREAD-to-THREAD exchanges use opaque field paths defined in the THREAD schema spec.
+
+### 3. Curated stage enum over full EPCIS `bizStep` vocabulary
+
+THREAD's `manufacturing[].stage` is a fixed enum of 8 values. EPCIS's CBV `bizStep` vocabulary is open and extensible.
+
+**Reason:** An open vocabulary creates ambiguity that makes automated schema validation, completeness scoring, and ESPR reporting harder. The 8 THREAD stages cover the textile supply chain stages required for ESPR compliance. Vendors who need additional granularity can use the `facility.id` and multiple stage entries.
+
+**Impact:** EPCIS events with `bizStep` values that don't map to a THREAD stage (e.g. `commissioning`, `inspecting`) must be dropped or mapped manually by the EPCIS adapter.
 
 ---
 
