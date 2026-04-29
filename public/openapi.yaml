@@ -629,8 +629,17 @@ paths:
       summary: Export DPP in EU ESPR registry format (JSON-LD)
       description: |
         Returns the DPP as a JSON-LD document ready to submit to the EU ESPR
-        registry. The export format will be updated when the ESPR delegated act
-        for textiles is finalised (expected 2026–2027).
+        registry. The document conforms to the THREAD ESPR export context
+        published at `https://thread.textileeco.com/espr-context.jsonld`.
+
+        Fields marked as `[speculative]` in the schema description are based on
+        CIRPASS-2 pilot guidance and current EU Commission working documents.
+        They will be updated to match the final delegated act for textiles
+        (expected 2026–2027). Subscribe to the THREAD changelog to receive
+        update notifications.
+
+        Only published DPPs can be exported. The response includes all
+        ESPR-required fields; optional fields are omitted when not present.
       tags: [Federation]
       security:
         - bearerAuth: [dpp:brand:read]
@@ -643,8 +652,85 @@ paths:
           content:
             application/ld+json:
               schema:
-                type: object
-                description: JSON-LD document conforming to the EU ESPR registry submission format
+                $ref: '#/components/schemas/ESPRRegistryExport'
+              examples:
+                default:
+                  value:
+                    '@context': 'https://thread.textileeco.com/espr-context.jsonld'
+                    '@type': 'thread:BatchDPP'
+                    '@id': 'https://id.textileeco.com/01/0123456789012/10/B2026Q1-001'
+                    schemaVersion: '0.1'
+                    issuedAt: '2026-04-24T10:00:00Z'
+                    status: published
+                    completenessScore: 1.0
+                    gtin: '0123456789012'
+                    batchId: B2026Q1-001
+                    productName: Organic Cotton T-Shirt
+                    modelNumber: SS26-TEE-001
+                    countryOfOrigin: TR
+                    euImporter:
+                      importerName: Example EU Importer Lda
+                      importerCountry: PT
+                      vatNumber: PT500000000
+                    materials:
+                      - fibre: organic cotton
+                        percentage: 95
+                        fibreRecycledContent: 0
+                        materialOrigin:
+                          originCountry: IN
+                          originRegion: Gujarat
+                        certifications: [GOTS]
+                      - fibre: elastane
+                        percentage: 5
+                        fibreRecycledContent: 0
+                        certifications: []
+                    manufacturing:
+                      - stage: spinning
+                        facilityId: 'urn:thread:facility:IN:SPIN-001'
+                        facilityName: Gujarat Spinning Co.
+                        facilityCountry: IN
+                      - stage: dyeing_finishing
+                        facilityId: 'urn:gs1:414:9876543210003'
+                        facilityName: XYZ Dyehouse
+                        facilityCountry: TR
+                        facilityCity: Bursa
+                      - stage: cut_make_trim
+                        facilityId: 'urn:gs1:414:1234567890123'
+                        facilityName: Istanbul Garment Factory
+                        facilityCountry: TR
+                        facilityCity: Istanbul
+                    environmental:
+                      carbonFootprint:
+                        cfValue: 4.2
+                        cfUnit: kgCO2e
+                        cfScope: cradle-to-gate
+                        cfMethodology: Higg MSI
+                      waterConsumption:
+                        waterValue: 2700
+                        waterUnit: litres_per_unit
+                      microplasticRisk: low
+                    compliance:
+                      reachSVHC: []
+                      zdhcMRSL: compliant
+                    circularEconomy:
+                      recycledContent: 0
+                      recyclabilityScore: high
+                      recyclabilityBasis: 100% single-fibre natural cotton, no coatings or finishes
+                      repairInfo: 'https://brand.textileeco.com/repair/SS26-TEE-001'
+                      endOfLifeOptions: [take-back-scheme, home-compostable]
+                    care:
+                      washSymbols: [wash-40, do-not-bleach, tumble-dry-low, iron-medium]
+        '400':
+          description: DPP is not in published state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                default:
+                  value:
+                    error: not_published
+                    message: Only published DPPs can be exported to the ESPR registry format
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1262,6 +1348,214 @@ components:
             value:
               type: string
               description: JWS compact serialisation
+
+    ESPRRegistryExport:
+      type: object
+      description: |
+        JSON-LD document for submission to the EU ESPR registry.
+        Conforms to the THREAD ESPR export context at
+        `https://thread.textileeco.com/espr-context.jsonld`.
+
+        Property names in this document differ from the raw THREAD schema in
+        cases where nested field names would collide (e.g. `cfValue` instead of
+        `value` inside `carbonFootprint`). The JSON-LD context maps every term
+        to its canonical IRI.
+
+        Fields annotated `[speculative]` are based on CIRPASS-2 draft guidance.
+        Their inclusion and exact form in the live registry will be confirmed
+        when the ESPR delegated act for textiles is published (2026–2027).
+      required:
+        - '@context'
+        - '@type'
+        - '@id'
+        - schemaVersion
+        - issuedAt
+        - status
+        - gtin
+        - batchId
+        - countryOfOrigin
+        - materials
+        - manufacturing
+        - compliance
+      properties:
+        '@context':
+          type: string
+          format: uri
+          enum: ['https://thread.textileeco.com/espr-context.jsonld']
+        '@type':
+          type: string
+          enum: ['thread:BatchDPP']
+        '@id':
+          type: string
+          format: uri
+          description: GS1 Digital Link URI — canonical public URL for this DPP
+        schemaVersion:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [published]
+        completenessScore:
+          type: number
+          minimum: 0
+          maximum: 1
+        gtin:
+          type: string
+          pattern: '^\d{13}$'
+        batchId:
+          type: string
+        productName:
+          type: string
+        modelNumber:
+          type: string
+        countryOfOrigin:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1 alpha-2 — country of last substantial transformation
+        euImporter:
+          type: object
+          description: Required when brand is established outside the EU/EEA
+          properties:
+            importerName:
+              type: string
+            importerCountry:
+              type: string
+              pattern: '^[A-Z]{2}$'
+            vatNumber:
+              type: string
+        materials:
+          type: array
+          description: Fibre composition — percentages must sum to 100
+          items:
+            type: object
+            required: [fibre, percentage, fibreRecycledContent]
+            properties:
+              fibre:
+                type: string
+                description: ISO 2076 fibre name, lowercase
+              percentage:
+                type: number
+                minimum: 0
+                maximum: 100
+              fibreRecycledContent:
+                type: number
+                minimum: 0
+                maximum: 100
+              materialOrigin:
+                type: object
+                properties:
+                  originCountry:
+                    type: string
+                    pattern: '^[A-Z]{2}$'
+                  originRegion:
+                    type: string
+              certifications:
+                type: array
+                items:
+                  type: string
+        manufacturing:
+          type: array
+          description: Ordered list of manufacturing stages (earliest first)
+          items:
+            type: object
+            required: [stage]
+            properties:
+              stage:
+                type: string
+              facilityId:
+                type: string
+                description: GLN URN or THREAD self-assigned facility URN
+              facilityName:
+                type: string
+              facilityCountry:
+                type: string
+                pattern: '^[A-Z]{2}$'
+              facilityCity:
+                type: string
+        environmental:
+          type: object
+          description: '[speculative] Environmental impact data — exact registry fields pending delegated act'
+          properties:
+            carbonFootprint:
+              type: object
+              properties:
+                cfValue:
+                  type: number
+                  description: Carbon footprint in kgCO2e
+                cfUnit:
+                  type: string
+                  enum: [kgCO2e]
+                cfScope:
+                  type: string
+                  enum: [cradle-to-gate, cradle-to-grave]
+                cfMethodology:
+                  type: string
+                  description: e.g. "Higg MSI", "ISO 14067"
+            waterConsumption:
+              type: object
+              description: '[speculative]'
+              properties:
+                waterValue:
+                  type: number
+                waterUnit:
+                  type: string
+                  enum: [litres_per_unit]
+            microplasticRisk:
+              type: string
+              enum: [low, medium, high]
+              description: '[speculative]'
+        compliance:
+          type: object
+          required: [reachSVHC]
+          properties:
+            reachSVHC:
+              type: array
+              description: Substances of Very High Concern — empty array means none detected
+              items:
+                type: object
+                required: [cas, substanceName, concentration]
+                properties:
+                  cas:
+                    type: string
+                  substanceName:
+                    type: string
+                  concentration:
+                    type: number
+            zdhcMRSL:
+              type: string
+              enum: [compliant, non-compliant, not-assessed]
+              description: '[speculative]'
+        circularEconomy:
+          type: object
+          description: '[speculative] Exact circular economy fields pending delegated act'
+          properties:
+            recycledContent:
+              type: number
+              minimum: 0
+              maximum: 100
+            recyclabilityScore:
+              type: string
+              enum: [high, medium, low]
+            recyclabilityBasis:
+              type: string
+            repairInfo:
+              type: string
+              format: uri
+            endOfLifeOptions:
+              type: array
+              items:
+                type: string
+        care:
+          type: object
+          description: '[speculative] Care instructions — inclusion in registry pending delegated act'
+          properties:
+            washSymbols:
+              type: array
+              items:
+                type: string
+                description: ISO 3758 / GINETEX care symbol code
 
     WebhookInput:
       type: object
