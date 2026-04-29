@@ -22,7 +22,7 @@ A GS1 Digital Link URI encodes the GTIN and batch/lot. THREAD maps it to the pub
 | GS1 Digital Link URI | THREAD endpoint |
 |---|---|
 | `https://id.{brand-domain}/01/{GTIN}/10/{BatchID}` | Resolver redirects → `GET /thread/v1/dpp/{gtin}/{batchId}` |
-| `https://id.textileeco.com/01/0123456789012/10/B2026Q1-001` | `GET https://api.textileeco.com/v1/thread/v1/dpp/0123456789012/B2026Q1-001` |
+| `https://id.textileeco.com/01/0123456789012/10/B2026Q1-001` | `GET https://api.textileeco.com/thread/v1/dpp/0123456789012/B2026Q1-001` |
 
 The GS1 application identifiers used are:
 - `01` — GTIN (14 digits; THREAD uses GTIN-13 left-padded with a leading zero)
@@ -46,7 +46,7 @@ Serial-level application identifiers (`21`) are not used — THREAD DPPs are iss
 |---|---|---|
 | `lgtin` (GTIN + lot/batch) | `product.gtin` + `batch.batchId` | Direct equivalent — preferred EPCIS identifier for THREAD |
 | `sgtin` (GTIN + serial) | `product.gtin` + `batch.batchId` | Serial number is dropped; THREAD operates at batch level |
-| `bizLocation.id` (GLN) | `manufacturing[].facility.id` | GLN encoded as `urn:gs1:414:{gln}` |
+| `bizLocation.id` (GLN) | `manufacturing[].facility.id` | GLN encoded as `urn:gs1:id:gln:{gln}` |
 | `readPoint.id` | `manufacturing[].facility.id` | Same facility reference |
 | `eventTime` | `batch.productionDate` | THREAD uses YYYY-MM precision; EPCIS uses full ISO 8601 |
 | `inputEPCList` | `materials[].supplierRef` | Supplier GLN or URN |
@@ -56,16 +56,16 @@ Serial-level application identifiers (`21`) are not used — THREAD DPPs are iss
 
 ### EPCIS `bizStep` → THREAD `manufacturing[].stage`
 
-| EPCIS `bizStep` (CBV URI) | THREAD `stage` value | Notes |
+| EPCIS `bizStep` (CBV Web URI) | THREAD `stage` value | Notes |
 |---|---|---|
-| `urn:epcglobal:cbv:bizstep:transforming` | `spinning` or `weaving_knitting` | Fibre-to-yarn or yarn-to-fabric transformation |
-| `urn:epcglobal:cbv:bizstep:dyeing` | `dyeing_finishing` | THREAD combines dyeing and finishing into one stage |
-| `urn:epcglobal:cbv:bizstep:assembling` | `cut_make_trim` | Cut, make, trim / garment assembly |
-| `urn:epcglobal:cbv:bizstep:packing` | `logistics` | Packing and outbound logistics |
-| `urn:epcglobal:cbv:bizstep:shipping` | `logistics` | Same stage as packing in THREAD |
-| `urn:epcglobal:cbv:bizstep:harvesting` | `raw_material` | Raw fibre harvest or ginning |
-| `urn:epcglobal:cbv:bizstep:commissioning` | — | No THREAD equivalent; product creation uses the product shell endpoint |
-| `urn:epcglobal:cbv:bizstep:inspecting` | — | Not mapped; quality control is tracked separately in THREAD |
+| `https://ref.gs1.org/cbv/bizstep/transforming` | `spinning` or `weaving_knitting` | Fibre-to-yarn or yarn-to-fabric transformation |
+| `https://ref.gs1.org/cbv/bizstep/dyeing` | `dyeing_finishing` | THREAD combines dyeing and finishing into one stage |
+| `https://ref.gs1.org/cbv/bizstep/assembling` | `cut_make_trim` | Cut, make, trim / garment assembly |
+| `https://ref.gs1.org/cbv/bizstep/packing` | `logistics` | Packing and outbound logistics |
+| `https://ref.gs1.org/cbv/bizstep/shipping` | `logistics` | Same stage as packing in THREAD |
+| `https://ref.gs1.org/cbv/bizstep/harvesting` | `raw_material` | Raw fibre harvest or ginning |
+| `https://ref.gs1.org/cbv/bizstep/commissioning` | — | No THREAD equivalent; product creation uses the product shell endpoint |
+| `https://ref.gs1.org/cbv/bizstep/inspecting` | — | Not mapped; quality control is tracked separately in THREAD |
 
 **Reference:** [gs1.org/standards/epcis](https://www.gs1.org/standards/epcis)
 
