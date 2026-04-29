@@ -183,8 +183,42 @@ For a platform to be THREAD-compliant and federated, it must implement:
 
 ---
 
-## Relationship to UNTP
+## Relationship to UNTP and convergence roadmap
 
 The UN Transparency Protocol (UNTP) uses W3C Verifiable Credentials as portable, self-verifying attestations. A UNTP Digital Conformity Credential is the conceptual equivalent of a THREAD Portable Package with cryptographic proof.
 
-As UNTP matures, THREAD's portable package format will converge with UNTP's VC model. A UNTP-issued VC will be accepted as a valid `import-package` payload, and THREAD nodes will be able to issue UNTP-compatible VCs on export.
+THREAD and UNTP address the same problem from different starting points: THREAD prioritises accessibility and operational simplicity for the textile industry; UNTP prioritises cryptographic verifiability and cross-industry interoperability. The two converge as UNTP matures.
+
+### Phase 1 — Accept UNTP VCs as `import-package` payloads (planned)
+
+A UNTP Digital Conformity Credential issued by a third-party certifier (e.g. a lab, audit body, or standard-setting organisation) will be accepted as a valid payload for `POST .../import-package`.
+
+When a UNTP VC is received, the node will:
+1. Resolve the issuer DID to obtain the verification key
+2. Verify the VC proof
+3. Map `credentialSubject` fields to THREAD schema field paths
+4. Write a provenance entry with `evidenceType: "certification"` and `method: "portable-package"`, preserving the original VC as `evidenceRef`
+
+This makes THREAD nodes first-class consumers of the UNTP ecosystem — a certifier issuing UNTP VCs does not need to re-implement a THREAD-specific integration.
+
+### Phase 2 — Issue UNTP-compatible VCs on export (planned)
+
+THREAD nodes will be able to export DPPs as UNTP-compatible Verifiable Credentials, signed with the node's DID. This enables THREAD DPPs to be presented in any ecosystem that accepts UNTP VCs — including cross-border regulatory systems and non-textile supply chain platforms.
+
+The export endpoint will be:
+
+```http
+GET /products/{gtin}/batches/{batchId}/export/untp-vc
+Accept: application/vc+ld+json
+```
+
+### Current state
+
+| Capability | Status |
+|---|---|
+| Accept THREAD Portable Packages (JWS-signed JSON) | Available in v1.0 |
+| Accept W3C VC `evidenceRef` in provenance entries | Available in v1.0 |
+| Accept UNTP Digital Conformity Credentials as `import-package` | Planned — post v1.0 |
+| Export DPPs as UNTP-compatible VCs | Planned — post v1.0 |
+
+For a detailed structural comparison of THREAD Portable Packages and UNTP Digital Conformity Credentials, see the [Standards Alignment](/compliance/standards) reference.
