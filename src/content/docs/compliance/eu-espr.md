@@ -1,6 +1,6 @@
 ---
 title: EU ESPR Compliance
-description: Field-by-field mapping between THREAD schema and EU ESPR requirements for textiles.
+description: Field-by-field mapping between THREAD schema and EU ESPR requirements for textiles, with completeness scoring weights and ambiguity flags.
 sidebar:
   order: 1
 ---
@@ -18,33 +18,87 @@ THREAD tracks the CIRPASS-2 pilot outputs and EU Commission working documents to
 | Delegated act for textiles published | 2026–2027 | Pending |
 | DPP mandatory for textiles in EU | ~2028 | Pending |
 
-## Required data fields (expected)
+---
 
-The table below maps each expected ESPR requirement to the THREAD schema field and indicates how THREAD validates it.
+## Field mapping
 
-| ESPR Requirement | THREAD Field | Validation rule |
+**Status values:**
+- **Required** — expected as mandatory based on CIRPASS-2 outputs and current EU DPP framework
+- **Conditional** — required only when a specific condition applies (noted in the table)
+- **Recommended** — not yet confirmed as mandatory; tracked and surfaced to implementors
+- **Optional** — not in scope for the current ESPR draft for textiles
+
+**Weight** is the scoring coefficient used in `dpp.completenessScore` (see [Scoring algorithm](#scoring-algorithm)). Structural fields are always present when a DPP exists and are excluded from scoring. Recommended and optional fields do not contribute to the score.
+
+⚠ marks fields where the delegated act text is still ambiguous — see [Ambiguous fields](#ambiguous-fields).
+
+| ESPR Requirement | THREAD Field | Status | Weight | Validation rule |
+|---|---|---|---|---|
+| Unique product identifier | `dpp.id` | Required | — structural | Valid GS1 Digital Link URI |
+| Batch/lot identifier | `batch.batchId` | Required | — structural | Alphanumeric, URL-safe, max 20 chars |
+| Material composition | `materials[].fibre` + `materials[].percentage` | Required | **0.15** | All percentages sum to 100; at least one entry |
+| Carbon footprint | `environmental.carbonFootprint` (`value` + `scope` + `methodology`) | Required | **0.15** | ⚠ All three sub-fields required together |
+| Substances of concern (SVHC) | `compliance.reachSVHC` | Required | **0.12** | Array required; empty = none detected (must be explicit) |
+| Recycled content | `circularEconomy.recycledContent` | Required | **0.10** | Number 0–100 (% of total product weight) |
+| Recyclability | `circularEconomy.recyclabilityScore` + `circularEconomy.recyclabilityBasis` | Required | **0.08** | `circularEconomy.recyclabilityBasis` required when score is `medium` or `low` |
+| Durability / repairability | `circularEconomy.repairInfo` | Required | **0.08** | Valid URI to repair instructions or spare parts |
+| End-of-life options | `circularEconomy.endOfLifeOptions` | Required | **0.07** | At least one option from the defined enum |
+| Care instructions | `care.washSymbols` | Required | **0.07** | At least one valid ISO 3758 / GINETEX code |
+| Country of origin | `batch.countryOfOrigin` | Required | **0.07** | ISO 3166-1 alpha-2; country of last substantial transformation |
+| Manufacturing facility | `manufacturing[-1].facility` | Required | **0.06** | Last production stage facility with country |
+| EU importer identity | `product.euImporter` | Conditional | **0.05** | Required when issuing brand is domiciled outside EU/EEA |
+| Water consumption | `environmental.waterConsumption` | Recommended | — | ⚠ Inclusion in delegated act unconfirmed |
+| Microplastic shedding risk | `environmental.microplasticRisk` | Recommended | — | ⚠ Assessment methodology not yet standardised |
+| Social certifications | `social.certifications` | Optional | — | Not in current ESPR draft scope for textiles |
+
+---
+
+## Scoring algorithm
+
+`dpp.completenessScore` is a weighted ratio of present required fields over all applicable required fields.
+
+```
+score = Σ(weight_i × present_i) / Σ(weight_i × applicable_i)
+```
+
+Where:
+- `weight_i` — the weight from the table above (structural fields excluded)
+- `present_i` — `1` if the field is present and passes validation; `0` otherwise
+- `applicable_i` — `1` for all required fields except `product.euImporter`, which is `1` only when the issuing brand's country is outside EU/EEA and `0` otherwise
+
+**Example — EU brand, all fields present:**
+
+| Field | Weight | Applicable | Present | Contribution |
+|---|---|---|---|---|
+| `materials` | 0.15 | 1 | 1 | 0.15 |
+| `carbonFootprint` | 0.15 | 1 | 1 | 0.15 |
+| `reachSVHC` | 0.12 | 1 | 1 | 0.12 |
+| `recycledContent` | 0.10 | 1 | 1 | 0.10 |
+| `recyclabilityScore` | 0.08 | 1 | 1 | 0.08 |
+| `repairInfo` | 0.08 | 1 | 1 | 0.08 |
+| `endOfLifeOptions` | 0.07 | 1 | 1 | 0.07 |
+| `washSymbols` | 0.07 | 1 | 1 | 0.07 |
+| `countryOfOrigin` | 0.07 | 1 | 1 | 0.07 |
+| `manufacturing[-1]` | 0.06 | 1 | 1 | 0.06 |
+| `euImporter` | 0.05 | **0** (EU brand) | — | — |
+| **Total** | | **0.95** | | **0.95** |
+
+`score = 0.95 / 0.95 = 1.0` → status: `complete`
+
+For a non-EU brand, `euImporter` becomes applicable (`applicable_i = 1`), the denominator is `1.0`, and the brand must also supply `product.euImporter` to achieve a score of `1.0`.
+
+**Status thresholds:**
+
+| Score | `espr.status` | Publishable |
 |---|---|---|
-| **Unique product identifier** | `dpp.id` (GS1 Digital Link) | Must be a valid GS1 Digital Link URI |
-| **Material composition** | `materials[].fibre` + `percentage` | All percentages must sum to 100; at least one material required |
-| **Country of origin** (last substantial transformation) | `batch.countryOfOrigin` | Valid ISO 3166-1 alpha-2 code |
-| **EU importer identity** | `product.euImporter` | Required when brand's `issuedBy.country` is outside EU/EEA |
-| **Durability / repairability info** | `circularEconomy.repairInfo` | Valid URI |
-| **Recycled content (%)** | `circularEconomy.recycledContent` | Number 0–100 |
-| **Recyclability information** | `circularEconomy.recyclabilityScore` + `recyclabilityBasis` | Score present; basis required when score is `medium` or `low` |
-| **Carbon footprint** | `environmental.carbonFootprint.value` + `scope` + `methodology` | All three sub-fields required together |
-| **Substances of concern (SVHC)** | `compliance.reachSVHC` | Array required (empty = none detected; must be explicitly declared) |
-| **Care instructions** | `care.washSymbols` | At least one valid ISO 3758 code |
-| **End-of-life information** | `circularEconomy.endOfLifeOptions` | At least one option required |
-| **Manufacturing country / facility** | `manufacturing[-1].facility.country` | Last stage facility required |
-| **Batch/lot identifier** | `batch.batchId` | Alphanumeric, URL-safe, max 20 chars |
+| `< 1.0` | `incomplete` | No |
+| `1.0` | `complete` | Yes |
 
-## ESPR completeness scoring
+---
 
-The THREAD validation engine calculates an **ESPR completeness score** (0–1) for every batch DPP. The score is the ratio of present required fields to total required fields.
+## Gap report
 
-A DPP cannot be published until its ESPR completeness score reaches **1.0** (all required fields present and valid).
-
-The completeness report is available at any time:
+The completeness report is available at any time and lists each missing field with a human-readable note:
 
 ```http
 GET /products/{gtin}/batches/{batchId}/completeness
@@ -52,26 +106,48 @@ GET /products/{gtin}/batches/{batchId}/completeness
 
 ```json
 {
-  "score": 0.86,
+  "score": 0.73,
   "status": "incomplete",
   "espr": {
-    "required": 14,
-    "present": 12,
+    "applicableWeight": 1.0,
+    "presentWeight": 0.73,
     "missing": [
       {
         "field": "environmental.carbonFootprint",
+        "weight": 0.15,
         "label": "Carbon footprint",
         "note": "Required by ESPR. Must include value, scope, and methodology."
       },
       {
         "field": "compliance.reachSVHC",
+        "weight": 0.12,
         "label": "REACH SVHC substances",
-        "note": "An explicit declaration is required even if no substances are present. Submit an empty array to confirm no substances of concern."
+        "note": "An explicit declaration is required even if no substances are present. Submit an empty array to confirm none detected."
       }
     ]
   }
 }
 ```
+
+---
+
+## Ambiguous fields
+
+The following fields have requirements that are not yet clearly defined in the available draft delegated act text. THREAD's current interpretation is noted. These will be updated when the delegated act is finalised.
+
+**`environmental.carbonFootprint.scope`**
+The draft does not specify whether the carbon footprint must be calculated to cradle-to-gate (production only) or cradle-to-grave (full lifecycle). THREAD accepts both `cradle-to-gate` and `cradle-to-grave` and requires the scope to be declared explicitly. Implementors should use cradle-to-gate as the minimum; cradle-to-grave will likely be required for the published DPP.
+
+**`environmental.waterConsumption`**
+Water consumption appears in CIRPASS-2 pilot templates as a recommended field but is not yet confirmed as mandatory in the ESPR textile delegated act. THREAD tracks it as Recommended and will promote it to Required if confirmed.
+
+**`environmental.microplasticRisk`**
+The EU Textile Strategy references microplastic shedding as a concern but no standardised assessment methodology has been adopted. THREAD uses a three-level risk rating (`low` / `medium` / `high`) as a placeholder; the exact methodology will be revised once EU standards (e.g. under CEN/TC 248) are published.
+
+**`compliance.reachSVHC` concentration threshold**
+The REACH Regulation requires SVHC disclosure above 0.1% by weight in articles. The ESPR delegated act may set a different threshold or require disclosure of all detected substances regardless of concentration. THREAD currently enforces no minimum threshold — implementors should declare all detected substances.
+
+---
 
 ## GS1 Digital Link requirement
 
@@ -88,6 +164,8 @@ https://id.{brand-domain}/01/{GTIN}/10/{BatchID}
 ```
 
 For brands without their own resolver, THREAD provides a hosted resolver at `id.textileeco.com`.
+
+---
 
 ## Self-declaration vs. verified data
 
@@ -248,8 +326,9 @@ The machine-readable OpenAPI schema for this response is available in [`/openapi
 When the ESPR delegated act for textiles is published, THREAD will:
 
 1. Publish a schema migration guide identifying any new or changed fields
-2. Release an updated validation ruleset
-3. Provide a 6-month grace period during which both old and new rulesets are accepted
-4. Mark older DPPs with a `schema_update_required` flag
+2. Release an updated validation ruleset with revised weights
+3. Resolve all ⚠ ambiguous fields based on the final delegated act text
+4. Provide a 6-month grace period during which both old and new rulesets are accepted
+5. Mark older DPPs with a `schema_update_required` flag
 
 Subscribe to the THREAD changelog at `https://textileeco.com/changelog` to receive notifications when the delegated act is published and the schema is updated.
