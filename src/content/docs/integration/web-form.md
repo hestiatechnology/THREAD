@@ -120,7 +120,7 @@ Tier 2 submissions write to `manufacturing[]`, `environmental`, and `compliance`
 | Facility name | `manufacturing[].facility.name` | string | Yes |
 | Country | `manufacturing[].facility.country` | ISO 3166-1 alpha-2 | Yes |
 | City | `manufacturing[].facility.city` | string | No |
-| Facility ID | `manufacturing[].facility.id` | GLN URN or THREAD URN | No |
+| Facility ID | `manufacturing[].facility.id` | URI (GLN or THREAD URN) | No |
 | Processing stage | `manufacturing[].stage` | enum | Yes |
 
 Valid values for `stage`: `spinning`, `weaving_knitting`, `dyeing_finishing`, `embellishment`.
@@ -133,14 +133,14 @@ Valid values for `stage`: `spinning`, `weaving_knitting`, `dyeing_finishing`, `e
 | CF scope | `environmental.carbonFootprint.scope` | `cradle-to-gate` or `cradle-to-grave` |
 | CF methodology | `environmental.carbonFootprint.methodology` | string (e.g. "Higg MSI") |
 | Water consumption | `environmental.waterConsumption.value` | number (litres per unit) |
-| Microplastic risk | `environmental.microplasticRisk` | `low`, `medium`, or `high` |
-| Chemicals of concern | `environmental.chemicalsOfConcern[]` | CAS number + name + concentration |
+| Microplastic risk | `environmental.microplasticRisk` | enum (low, medium, or high) |
+| Chemicals of concern | `environmental.chemicalsOfConcern[]` | string array (CAS + name + concentration) |
 
 **Chemical compliance:**
 
 | Form label | Canonical field | Type | Required |
 |---|---|---|---|
-| ZDHC MRSL status | `compliance.zdhcMRSL` | `compliant`, `non-compliant`, or `not-assessed` | Yes |
+| ZDHC MRSL status | `compliance.zdhcMRSL` | enum (compliant, non-compliant, or not-assessed) | Yes |
 
 ### Tier 1 — Cut, make, trim
 
@@ -153,15 +153,15 @@ Tier 1 submissions write to `manufacturing[]` and `social`.
 | Facility name | `manufacturing[].facility.name` | string | Yes |
 | Country | `manufacturing[].facility.country` | ISO 3166-1 alpha-2 | Yes |
 | City | `manufacturing[].facility.city` | string | No |
-| Facility ID | `manufacturing[].facility.id` | GLN URN or THREAD URN | No |
-| Processing stage | `manufacturing[].stage` | `cut_make_trim` | Yes |
+| Facility ID | `manufacturing[].facility.id` | URI (GLN or THREAD URN) | No |
+| Processing stage | `manufacturing[].stage` | string ("cut_make_trim") | Yes |
 
 **Social compliance:**
 
 | Form label | Canonical field | Type | Required |
 |---|---|---|---|
 | Certifications held | `social.certifications[]` | string array | No |
-| Living wage status | `social.livingWageStatus` | `self-declared`, `third-party-assured`, or `not-assessed` | Yes |
+| Living wage status | `social.livingWageStatus` | enum (self-declared, third-party-assured, or not-assessed) | Yes |
 | Audit report URL | `social.auditRef` | URI | No |
 
 ### Certifier
@@ -171,7 +171,7 @@ Certifier submissions push verified certification status onto existing data. The
 | Form label | Canonical field | Type |
 |---|---|---|
 | Certification name | `materials[].certifications[]` or `social.certifications[]` | string |
-| Verification status | `provenance[].evidenceType` | `certification` |
+| Verification status | `provenance[].evidenceType` | string ("certification") |
 | Evidence reference | `provenance[].evidenceRef` | URI |
 | Audit date | `provenance[].assertedAt` | ISO 8601 date-time |
 
