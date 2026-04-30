@@ -46,13 +46,14 @@ tags:
     description: Per-tier data submission
   - name: Completeness & Publishing
     description: ESPR completeness and DPP publication
+  - name: Token Management
+    description: Scoped invite token issuance and revocation
   - name: Federation
     description: Cross-platform interoperability endpoints
   - name: Webhooks
     description: Event subscriptions
 
 paths:
-
   # ── Products ──────────────────────────────────────────────────────────────
 
   /products/{gtin}:
@@ -64,13 +65,13 @@ paths:
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
+        - $ref: "#/components/parameters/gtin"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProductInput'
+              $ref: "#/components/schemas/ProductInput"
             examples:
               default:
                 value:
@@ -86,24 +87,24 @@ paths:
                     country: PT
                     vatNumber: PT500000000
       responses:
-        '200':
+        "200":
           description: Product updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '201':
+                $ref: "#/components/schemas/ProductResponse"
+        "201":
           description: Product created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: "#/components/schemas/ProductResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
     get:
       operationId: getProduct
@@ -113,35 +114,37 @@ paths:
         - bearerAuth: [dpp:brand:read]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
+        - $ref: "#/components/parameters/gtin"
       responses:
-        '200':
+        "200":
           description: Product record
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/ProductResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Batches ───────────────────────────────────────────────────────────────
 
   /products/{gtin}/batches:
     post:
       operationId: createBatch
-      summary: Create a batch DPP
+      summary: Create a batch thread
       tags: [Batches]
       security:
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
+        - $ref: "#/components/parameters/gtin"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BatchInput'
+              $ref: "#/components/schemas/BatchInput"
             examples:
               default:
                 value:
@@ -151,44 +154,44 @@ paths:
                   unit: pieces
                   countryOfOrigin: TR
       responses:
-        '201':
+        "201":
           description: Batch created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchCreatedResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
+                $ref: "#/components/schemas/BatchCreatedResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}:
     get:
       operationId: getBatch
-      summary: Get a batch DPP (authenticated)
-      description: Returns the full batch DPP including draft data. Requires `dpp:brand:read` scope.
+      summary: Get a batch thread (authenticated)
+      description: Returns the full batch thread including draft data. Requires `dpp:brand:read` scope.
       tags: [Batches]
       security:
         - bearerAuth: [dpp:brand:read]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
-          description: Full batch DPP
+        "200":
+          description: Full batch thread
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchDPP'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/BatchDPP"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Invite Tokens ────────────────────────────────────────────────────────
 
@@ -256,8 +259,8 @@ paths:
         - bearerAuth: [dpp:tier3:write]
         - inviteToken: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
@@ -265,7 +268,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/MaterialEntry'
+                $ref: "#/components/schemas/MaterialEntry"
             examples:
               default:
                 value:
@@ -283,18 +286,18 @@ paths:
                     recycledContent: 0
                     certifications: []
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}/manufacturing:
     post:
@@ -303,17 +306,19 @@ paths:
       description: Appends one processing stage to the supply chain. Each call adds a stage; the array is ordered by submission time.
       tags: [Supply Chain Data]
       security:
-        - bearerAuth: [dpp:tier1:write, dpp:tier2:write, dpp:tier3:write]
+        - bearerAuth: [dpp:tier1:write]
+        - bearerAuth: [dpp:tier2:write]
+        - bearerAuth: [dpp:tier3:write]
         - inviteToken: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ManufacturingStage'
+              $ref: "#/components/schemas/ManufacturingStage"
             examples:
               default:
                 value:
@@ -324,18 +329,18 @@ paths:
                     country: TR
                     city: Bursa
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}/environmental:
     put:
@@ -346,14 +351,14 @@ paths:
         - bearerAuth: [dpp:tier2:write]
         - inviteToken: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnvironmentalData'
+              $ref: "#/components/schemas/EnvironmentalData"
             examples:
               default:
                 value:
@@ -368,18 +373,18 @@ paths:
                   chemicalsOfConcern: []
                   microplasticRisk: low
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}/social:
     put:
@@ -390,14 +395,14 @@ paths:
         - bearerAuth: [dpp:tier1:write]
         - inviteToken: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SocialData'
+              $ref: "#/components/schemas/SocialData"
             examples:
               default:
                 value:
@@ -405,18 +410,18 @@ paths:
                   livingWageStatus: third-party-assured
                   auditRef: https://audits.textileeco.com/report/12345
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}/compliance:
     put:
@@ -424,35 +429,37 @@ paths:
       summary: Submit regulatory compliance data (Tier 1 / Brand)
       tags: [Supply Chain Data]
       security:
-        - bearerAuth: [dpp:tier1:write, dpp:brand:write]
+        - bearerAuth: [dpp:tier1:write]
+        - bearerAuth: [dpp:brand:write]
         - inviteToken: []
+        - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ComplianceData'
+              $ref: "#/components/schemas/ComplianceData"
             examples:
               default:
                 value:
                   reachSVHC: []
                   zdhcMRSL: compliant
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /products/{gtin}/batches/{batchId}/circular-economy:
     put:
@@ -463,14 +470,14 @@ paths:
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CircularEconomyData'
+              $ref: "#/components/schemas/CircularEconomyData"
             examples:
               default:
                 value:
@@ -480,18 +487,18 @@ paths:
                   repairInfo: https://brand.textileeco.com/repair/SS26-TEE-001
                   endOfLifeOptions: [take-back-scheme, home-compostable]
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   # ── Completeness & Publishing ─────────────────────────────────────────────
 
@@ -504,15 +511,15 @@ paths:
         - bearerAuth: [dpp:brand:read]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
+        "200":
           description: Completeness report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompletenessReport'
+                $ref: "#/components/schemas/CompletenessReport"
               examples:
                 default:
                   value:
@@ -524,64 +531,232 @@ paths:
                       missing:
                         - environmental.carbonFootprint
                         - compliance.reachSVHC
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /products/{gtin}/batches/{batchId}/publish:
     post:
       operationId: publishBatch
-      summary: Publish a DPP
+      summary: Publish a thread
       description: |
-        Transitions a batch DPP from `draft` to `published`. Only callable with
+        Transitions a batch thread from `draft` to `published`. Only callable with
         `dpp:brand:write` scope. Blocked if ESPR-required fields are missing.
-        Once published, the DPP is publicly readable via the federation endpoint
+        Once published, the thread is publicly readable via the federation endpoint
         and a GS1 Digital Link URL is issued.
       tags: [Completeness & Publishing]
       security:
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
-          description: DPP published
+        "200":
+          description: thread published
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublishResponse'
+                $ref: "#/components/schemas/PublishResponse"
               examples:
                 default:
                   value:
                     status: published
                     digitalLinkUrl: https://id.textileeco.com/01/0123456789012/10/B2026Q1-001
-                    registryRef: https://espr-registry.eu/dpp/0123456789012/B2026Q1-001
-        '400':
+                    registryRef: https://espr-registry.eu/thread/0123456789012/B2026Q1-001
+        "400":
           description: ESPR completeness requirements not met
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               examples:
                 default:
                   value:
                     error: espr_incomplete
-                    message: DPP cannot be published — required ESPR fields are missing
+                    message: thread cannot be published — required ESPR fields are missing
                     fields:
                       - path: environmental.carbonFootprint
                         issue: Required for ESPR compliance
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  # ── Token Management ──────────────────────────────────────────────────────
+
+  /products/{gtin}/batches/{batchId}/invite-tokens:
+    post:
+      operationId: createInviteToken
+      summary: Generate a scoped invite token for a supplier
+      description: |
+        Creates a short-lived JWT granting a supplier write access to a specific GTIN
+        and batch for their tier. The returned `token` can be used as a Bearer token
+        in direct API calls, or `webFormUrl` can be shared with the supplier for the
+        Tier C web form.
+
+        Tokens are signed ES256 using the node key at `/.well-known/thread-keys.json`
+        and are revocable via `DELETE /invite-tokens/{tokenId}`.
+
+        On batch creation, one invite link per tier is pre-generated and returned in
+        `BatchCreatedResponse.supplierInviteLinks`. Use this endpoint to generate
+        additional tokens or replacements after the initial tokens expire.
+      tags: [Token Management]
+      security:
+        - bearerAuth: [dpp:brand:write]
+        - apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteTokenInput"
+            examples:
+              tier2_supplier:
+                summary: Invite a Tier 2 dyehouse
+                value:
+                  tier: tier2
+                  supplierRef: XYZ Dyehouse
+                  expiresIn: 604800
+              tier3_supplier:
+                summary: Invite a Tier 3 raw material supplier
+                value:
+                  tier: tier3
+                  supplierRef: Gujarat Cotton Co
+                  expiresIn: 604800
+      responses:
+        "201":
+          description: Invite token created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteToken"
+              examples:
+                default:
+                  value:
+                    tokenId: sit_<32-char-token-id>
+                    token: "<jwt-compact-serialisation>"
+                    tier: tier2
+                    gtin: "0123456789012"
+                    batchId: B2026Q1-001
+                    supplierRef: XYZ Dyehouse
+                    expiresAt: "2026-06-23T00:00:00Z"
+                    webFormUrl: https://app.textileeco.com/contribute/t2/<jwt-compact-serialisation>
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    get:
+      operationId: listInviteTokens
+      summary: List active invite tokens for a batch
+      description: Returns token summaries without raw JWT values. A token's JWT is only exposed at creation time.
+      tags: [Token Management]
+      security:
+        - bearerAuth: [dpp:brand:read]
+        - apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
+      responses:
+        "200":
+          description: Active invite tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InviteTokenSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /products/{gtin}/batches/{batchId}/invite-tokens/{tokenId}:
+    delete:
+      operationId: revokeInviteToken
+      summary: Revoke a scoped invite token
+      description: |
+        Immediately invalidates the token. Any subsequent API call or web form access
+        using this token will receive `401 unauthorized`. Revocation is permanent.
+      tags: [Token Management]
+      security:
+        - bearerAuth: [dpp:brand:write]
+        - apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
+        - $ref: "#/components/parameters/tokenId"
+      responses:
+        "204":
+          description: Token revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Federation ────────────────────────────────────────────────────────────
+
+  /.well-known/thread-keys.json:
+    get:
+      operationId: getPublicKeys
+      summary: Public key discovery (JWKS)
+      description: |
+        Returns the node's public key set in JWK format. Used by other THREAD nodes
+        to verify ES256 signatures on Scoped Invite Tokens and Portable Packages
+        issued by this node. Every THREAD-compliant node must expose this endpoint
+        without authentication.
+
+        Keys are rotated annually. The `kid` field identifies which key signed a given
+        token. Multiple keys may be present during a rotation overlap window.
+      tags: [Federation]
+      servers:
+        - url: https://api.textileeco.com
+          description: Served at root path, not under /v1
+      responses:
+        "200":
+          description: JWKS document
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              examples:
+                default:
+                  value: public, max-age=86400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JWKSDocument"
+              examples:
+                default:
+                  value:
+                    keys:
+                      - kty: EC
+                        crv: P-256
+                        kid: thread-signing-2026
+                        use: sig
+                        alg: ES256
+                        x: f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU
+                        y: x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0
 
   /thread/v1/dpp/{gtin}/{batchId}:
     get:
@@ -595,10 +770,10 @@ paths:
         This endpoint must be implemented by every THREAD-compliant node.
       tags: [Federation]
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
+        "200":
           description: Published DPP
           headers:
             Cache-Control:
@@ -610,10 +785,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchDPP'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '410':
+                $ref: "#/components/schemas/BatchDPP"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
           description: DPP has been superseded by a newer version
           headers:
             Link:
@@ -625,7 +800,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /products/{gtin}/batches/{batchId}/export/thread-package:
     get:
@@ -635,23 +810,31 @@ paths:
         Returns a JWS-signed portable package containing the requesting tier's
         data slice and provenance entries. The package can be submitted to another
         THREAD-compliant node via `import-package`.
+
+        Any authenticated caller receives the slice corresponding to their tier.
+        Brand credentials return the full assembled package.
       tags: [Federation]
       security:
-        - bearerAuth: [dpp:read]
+        - bearerAuth: [dpp:brand:read]
+        - bearerAuth: [dpp:tier1:write]
+        - bearerAuth: [dpp:tier2:write]
+        - bearerAuth: [dpp:tier3:write]
+        - inviteToken: []
+        - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
+        "200":
           description: Signed portable package
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PortablePackage'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                $ref: "#/components/schemas/PortablePackage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /products/{gtin}/batches/{batchId}/import-package:
     post:
@@ -667,157 +850,71 @@ paths:
         - bearerAuth: [dpp:brand:write]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PortablePackage'
+              $ref: "#/components/schemas/PortablePackage"
       responses:
-        '200':
-          $ref: '#/components/responses/DataAccepted'
-        '400':
+        "200":
+          $ref: "#/components/responses/DataAccepted"
+        "400":
           description: Invalid or unverifiable package signature
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
               examples:
                 default:
                   value:
                     error: invalid_signature
                     message: JWS signature could not be verified against issuer public key
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /products/{gtin}/batches/{batchId}/export/espr-registry:
     get:
       operationId: exportESPRRegistry
-      summary: Export DPP in EU ESPR registry format (JSON-LD)
+      summary: Export thread in EU ESPR registry format (JSON-LD)
       description: |
-        Returns the DPP as a JSON-LD document ready to submit to the EU ESPR
-        registry. The document conforms to the THREAD ESPR export context
-        published at `https://thread.textileeco.com/espr-context.jsonld`.
-
-        Fields marked as `[speculative]` in the schema description are based on
-        CIRPASS-2 pilot guidance and current EU Commission working documents.
-        They will be updated to match the final delegated act for textiles
-        (expected 2026–2027). Subscribe to the THREAD changelog to receive
-        update notifications.
-
-        Only published DPPs can be exported. The response includes all
-        ESPR-required fields; optional fields are omitted when not present.
+        Returns the thread as a JSON-LD document ready to submit to the EU ESPR
+        registry. The export format will be updated when the ESPR delegated act
+        for textiles is finalised (expected 2026–2027).
       tags: [Federation]
       security:
         - bearerAuth: [dpp:brand:read]
         - apiKey: []
       parameters:
-        - $ref: '#/components/parameters/gtin'
-        - $ref: '#/components/parameters/batchId'
+        - $ref: "#/components/parameters/gtin"
+        - $ref: "#/components/parameters/batchId"
       responses:
-        '200':
+        "200":
           description: JSON-LD registry payload
           content:
             application/ld+json:
               schema:
-                $ref: '#/components/schemas/ESPRRegistryExport'
-              examples:
-                default:
-                  value:
-                    '@context': 'https://thread.textileeco.com/espr-context.jsonld'
-                    '@type': 'thread:BatchDPP'
-                    '@id': 'https://id.textileeco.com/01/0123456789012/10/B2026Q1-001'
-                    schemaVersion: '0.1'
-                    issuedAt: '2026-04-24T10:00:00Z'
-                    status: published
-                    completenessScore: 1.0
-                    gtin: '0123456789012'
-                    batchId: B2026Q1-001
-                    productName: Organic Cotton T-Shirt
-                    modelNumber: SS26-TEE-001
-                    countryOfOrigin: TR
-                    euImporter:
-                      importerName: Example EU Importer Lda
-                      importerCountry: PT
-                      vatNumber: PT500000000
-                    materials:
-                      - fibre: organic cotton
-                        percentage: 95
-                        fibreRecycledContent: 0
-                        materialOrigin:
-                          originCountry: IN
-                          originRegion: Gujarat
-                        certifications: [GOTS]
-                      - fibre: elastane
-                        percentage: 5
-                        fibreRecycledContent: 0
-                        certifications: []
-                    manufacturing:
-                      - stage: spinning
-                        facilityId: 'urn:thread:facility:IN:SPIN-001'
-                        facilityName: Gujarat Spinning Co.
-                        facilityCountry: IN
-                      - stage: dyeing_finishing
-                        facilityId: 'urn:gs1:414:9876543210003'
-                        facilityName: XYZ Dyehouse
-                        facilityCountry: TR
-                        facilityCity: Bursa
-                      - stage: cut_make_trim
-                        facilityId: 'urn:gs1:414:1234567890123'
-                        facilityName: Istanbul Garment Factory
-                        facilityCountry: TR
-                        facilityCity: Istanbul
-                    environmental:
-                      carbonFootprint:
-                        cfValue: 4.2
-                        cfUnit: kgCO2e
-                        cfScope: cradle-to-gate
-                        cfMethodology: Higg MSI
-                      waterConsumption:
-                        waterValue: 2700
-                        waterUnit: litres_per_unit
-                      microplasticRisk: low
-                    compliance:
-                      reachSVHC: []
-                      zdhcMRSL: compliant
-                    circularEconomy:
-                      recycledContent: 0
-                      recyclabilityScore: high
-                      recyclabilityBasis: 100% single-fibre natural cotton, no coatings or finishes
-                      repairInfo: 'https://brand.textileeco.com/repair/SS26-TEE-001'
-                      endOfLifeOptions: [take-back-scheme, home-compostable]
-                    care:
-                      washSymbols: [wash-40, do-not-bleach, tumble-dry-low, iron-medium]
-        '400':
-          description: DPP is not in published state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-              examples:
-                default:
-                  value:
-                    error: not_published
-                    message: Only published DPPs can be exported to the ESPR registry format
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                type: object
+                description: JSON-LD document conforming to the EU ESPR registry submission format
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ── Webhooks ──────────────────────────────────────────────────────────────
 
   /webhooks:
     post:
       operationId: createWebhook
-      summary: Subscribe to batch DPP events
+      summary: Subscribe to batch thread events
       tags: [Webhooks]
       security:
         - bearerAuth: [dpp:brand:read]
@@ -827,7 +924,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WebhookInput'
+              $ref: "#/components/schemas/WebhookInput"
             examples:
               default:
                 value:
@@ -838,36 +935,56 @@ paths:
                     - batch.published
                   secret: your-hmac-secret
       responses:
-        '201':
+        "201":
           description: Webhook created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WebhookResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: "#/components/schemas/WebhookResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
-# ── Components ───────────────────────────────────────────────────────────────
+# ── Components ────────────────────────────────────────────────────────────────
 
 components:
-
   securitySchemes:
     bearerAuth:
       type: oauth2
-      description: OAuth 2.0 client credentials for supplier system integrations. Tokens expire after 1 hour.
+      description: |
+        OAuth 2.0 client credentials flow for brand ERPs and supplier systems.
+        Exchange client credentials for a scoped access token (1-hour lifetime).
+
+        ```
+        POST https://auth.textileeco.com/oauth/token
+        Content-Type: application/x-www-form-urlencoded
+
+        grant_type=client_credentials
+        &client_id=<your-client-id>
+        &client_secret=<your-client-secret>
+        &scope=dpp:brand:write
+        ```
       flows:
         clientCredentials:
           tokenUrl: https://auth.textileeco.com/oauth/token
           scopes:
-            dpp:brand:write: Write brand-layer fields (product, care, end-of-life)
-            dpp:tier1:write: Write Tier-1 fields (CMT facility, social compliance)
-            dpp:tier2:write: Write Tier-2 fields (processing facility, chemicals)
-            dpp:tier3:write: Write Tier-3 fields (raw material, fibre certifications)
-            dpp:certifier:write: Push verified certification status
-            dpp:read: Read own-tier data
-            dpp:brand:read: Read full DPP (brand only)
+            dpp:brand:write: >
+              Write brand-layer fields (product identity, circular economy, compliance,
+              publishing). Also grants: invite token management, webhook management,
+              portable package import.
+            dpp:brand:read: >
+              Read full DPP including draft data, completeness reports, ESPR registry
+              export, portable package export, active invite token list.
+            dpp:tier1:write: >
+              Write Tier-1 fields: CMT manufacturing stage, social compliance data.
+            dpp:tier2:write: >
+              Write Tier-2 fields: processing manufacturing stage, environmental impact
+              (carbon, water, chemicals).
+            dpp:tier3:write: >
+              Write Tier-3 fields: raw material composition, fibre certifications.
+            dpp:certifier:write: >
+              Submit verified certification records for any tier.
 
     apiKey:
       type: apiKey
@@ -906,9 +1023,18 @@ components:
       schema:
         type: string
 
+    tokenId:
+      name: tokenId
+      in: path
+      required: true
+      description: Scoped invite token identifier (`sit_...`)
+      schema:
+        type: string
+        pattern: "^sit_[A-Za-z0-9]{32}$"
+
   responses:
     DataAccepted:
-      description: Data accepted and merged into the batch DPP
+      description: Data accepted and merged into the batch thread
       content:
         application/json:
           schema:
@@ -934,7 +1060,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           examples:
             default:
               value:
@@ -949,7 +1075,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           examples:
             default:
               value:
@@ -961,7 +1087,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           examples:
             default:
               value:
@@ -973,7 +1099,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           examples:
             default:
               value:
@@ -985,15 +1111,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           examples:
             default:
               value:
                 error: conflict
-                message: DPP is published and cannot be modified. Create a new batch version instead.
+                message: thread is published and cannot be modified. Create a new batch version instead.
 
   schemas:
-
     Error:
       type: object
       required: [error, message]
@@ -1013,6 +1138,95 @@ components:
                 type: string
               issue:
                 type: string
+
+    InviteToken:
+      type: object
+      required: [tokenId, token, tier, gtin, batchId, expiresAt, webFormUrl]
+      properties:
+        tokenId:
+          type: string
+          pattern: "^sit_[A-Za-z0-9]{32}$"
+          description: Revocation handle — use with `DELETE /invite-tokens/{tokenId}`
+        token:
+          type: string
+          description: |
+            JWT compact serialisation. Shown only at creation time — not retrievable
+            via the list endpoint. Use as `Authorization: Bearer <token>`.
+        tier:
+          type: string
+          enum: [tier1, tier2, tier3, certifier]
+        gtin:
+          type: string
+          pattern: '^\d{13}$'
+        batchId:
+          type: string
+        supplierRef:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        webFormUrl:
+          type: string
+          format: uri
+          description: Pre-authenticated URL for the Tier C web form — share with low-tech suppliers
+
+    InviteTokenSummary:
+      type: object
+      description: Token metadata returned by the list endpoint. Raw JWT is not included.
+      properties:
+        tokenId:
+          type: string
+          pattern: "^sit_[A-Za-z0-9]{32}$"
+        tier:
+          type: string
+          enum: [tier1, tier2, tier3, certifier]
+        supplierRef:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+          description: Timestamp of most recent authenticated request using this token, if any
+
+    JWKSDocument:
+      type: object
+      required: [keys]
+      description: |
+        JSON Web Key Set. Used to verify ES256 signatures on Scoped Invite Tokens
+        and Portable Packages issued by this node.
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            required: [kty, crv, kid, use, alg, x, y]
+            properties:
+              kty:
+                type: string
+                enum: [EC]
+              crv:
+                type: string
+                enum: [P-256]
+              kid:
+                type: string
+                description: Key identifier — rotated annually; multiple keys present during overlap
+              use:
+                type: string
+                enum: [sig]
+              alg:
+                type: string
+                enum: [ES256]
+              x:
+                type: string
+                description: Base64url-encoded x coordinate
+              y:
+                type: string
+                description: Base64url-encoded y coordinate
 
     ProductInput:
       type: object
@@ -1038,7 +1252,7 @@ components:
           type: array
           items:
             type: string
-            pattern: '^[A-Z]{2}$'
+            pattern: "^[A-Z]{2}$"
           description: ISO 3166-1 alpha-2 country codes
         euImporter:
           type: object
@@ -1048,7 +1262,7 @@ components:
               type: string
             country:
               type: string
-              pattern: '^[A-Z]{2}$'
+              pattern: "^[A-Z]{2}$"
             vatNumber:
               type: string
             address:
@@ -1057,7 +1271,7 @@ components:
 
     ProductResponse:
       allOf:
-        - $ref: '#/components/schemas/ProductInput'
+        - $ref: "#/components/schemas/ProductInput"
         - type: object
           properties:
             createdAt:
@@ -1085,7 +1299,7 @@ components:
           enum: [pieces, kg, metres]
         countryOfOrigin:
           type: string
-          pattern: '^[A-Z]{2}$'
+          pattern: "^[A-Z]{2}$"
           description: ISO 3166-1 alpha-2 — country of last substantial transformation
 
     BatchCreatedResponse:
@@ -1103,6 +1317,10 @@ components:
           maximum: 1
         supplierInviteLinks:
           type: object
+          description: >
+            Pre-generated web form URLs for each supplier tier. Share with the
+            supplier to open the Tier C form, or extract the token from the path
+            for direct API use. Generate replacements via `POST /invite-tokens`.
           properties:
             tier1:
               type: string
@@ -1131,7 +1349,7 @@ components:
           properties:
             country:
               type: string
-              pattern: '^[A-Z]{2}$'
+              pattern: "^[A-Z]{2}$"
             region:
               type: string
         recycledContent:
@@ -1174,7 +1392,7 @@ components:
               type: string
             country:
               type: string
-              pattern: '^[A-Z]{2}$'
+              pattern: "^[A-Z]{2}$"
             city:
               type: string
             certifications:
@@ -1207,7 +1425,7 @@ components:
               type: number
             unit:
               type: string
-              enum: [litres_per_unit]
+              enum: [litres_per_unit, litres_per_kg]
         chemicalsOfConcern:
           type: array
           items:
@@ -1315,7 +1533,14 @@ components:
               type: string
             role:
               type: string
-              enum: [brand, tier1-supplier, tier2-supplier, tier3-supplier, certifier]
+              enum:
+                [
+                  brand,
+                  tier1-supplier,
+                  tier2-supplier,
+                  tier3-supplier,
+                  certifier,
+                ]
         issuedBy:
           type: string
           format: uri
@@ -1325,7 +1550,14 @@ components:
           format: date-time
         evidenceType:
           type: string
-          enum: [self-declared, third-party-audit, certification, lab-test, epr-report]
+          enum:
+            [
+              self-declared,
+              third-party-audit,
+              certification,
+              lab-test,
+              epr-report,
+            ]
         evidenceRef:
           type: string
         method:
@@ -1334,9 +1566,9 @@ components:
 
     BatchDPP:
       type: object
-      description: Full canonical THREAD batch DPP. See https://thread.textileeco.com/schema.json for the complete JSON Schema.
+      description: Full canonical THREAD batch thread. See https://thread.textileeco.com/schema.json for the complete JSON Schema.
       properties:
-        dpp:
+        thread:
           type: object
           properties:
             id:
@@ -1367,27 +1599,27 @@ components:
                   items:
                     type: string
         product:
-          $ref: '#/components/schemas/ProductInput'
+          $ref: "#/components/schemas/ProductInput"
         batch:
-          $ref: '#/components/schemas/BatchInput'
+          $ref: "#/components/schemas/BatchInput"
         materials:
           type: array
           items:
-            $ref: '#/components/schemas/MaterialEntry'
+            $ref: "#/components/schemas/MaterialEntry"
         manufacturing:
           type: array
           items:
-            $ref: '#/components/schemas/ManufacturingStage'
+            $ref: "#/components/schemas/ManufacturingStage"
         environmental:
-          $ref: '#/components/schemas/EnvironmentalData'
+          $ref: "#/components/schemas/EnvironmentalData"
         social:
-          $ref: '#/components/schemas/SocialData'
+          $ref: "#/components/schemas/SocialData"
         circularEconomy:
-          $ref: '#/components/schemas/CircularEconomyData'
+          $ref: "#/components/schemas/CircularEconomyData"
         compliance:
-          $ref: '#/components/schemas/ComplianceData'
+          $ref: "#/components/schemas/ComplianceData"
         care:
-          $ref: '#/components/schemas/CareData'
+          $ref: "#/components/schemas/CareData"
         externalRefs:
           type: array
           description: Proprietary system identifiers (SAP, PLM, etc.) — never used for routing
@@ -1404,7 +1636,7 @@ components:
         provenance:
           type: array
           items:
-            $ref: '#/components/schemas/ProvenanceEntry'
+            $ref: "#/components/schemas/ProvenanceEntry"
 
     CompletenessReport:
       type: object
@@ -1446,7 +1678,8 @@ components:
     PortablePackage:
       type: object
       description: A JWS-signed data package for cross-platform supplier data exchange
-      required: [threadPackage, gtin, batchId, tier, data, provenance, signature]
+      required:
+        [threadPackage, gtin, batchId, tier, data, provenance, signature]
       properties:
         threadPackage:
           type: string
@@ -1465,7 +1698,7 @@ components:
         provenance:
           type: array
           items:
-            $ref: '#/components/schemas/ProvenanceEntry'
+            $ref: "#/components/schemas/ProvenanceEntry"
         signature:
           type: object
           required: [issuer, issuedAt, algorithm, value]
@@ -1492,6 +1725,9 @@ components:
           type: string
           enum: [tier1, tier2, tier3, certifier]
           description: Supply chain tier the token grants write access to
+        supplierRef:
+          type: string
+          description: Supplier name, email, or internal ID for your records
         expiresIn:
           type: integer
           minimum: 3600
@@ -1677,7 +1913,7 @@ components:
                   type: number
                 waterUnit:
                   type: string
-                  enum: [litres_per_unit]
+                  enum: [litres_per_unit, litres_per_kg]
             microplasticRisk:
               type: string
               enum: [low, medium, high]
@@ -1757,7 +1993,7 @@ components:
 
     WebhookResponse:
       allOf:
-        - $ref: '#/components/schemas/WebhookInput'
+        - $ref: "#/components/schemas/WebhookInput"
         - type: object
           properties:
             id:
